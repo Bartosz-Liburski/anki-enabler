@@ -64,7 +64,7 @@ The cleanest fallback if Vercel's non-commercial license or credit model becomes
 
 #### 3. Cloudflare Workers (Third)
 
-The original leader on familiarity + truly-unrestricted cost ($0 free / $5 clean paid, no license strings, no egress fees), and still the strongest on those two axes. Demoted to third by the developer's own decision after the cross-check exposed SSR-on-`workerd` friction specific to this stack. **Gap vs. the recommendation:** `workerd` is not Node — `@supabase/ssr` needs `nodejs_compat`, SSR routes can silently return `[object Object]` until `disable_nodejs_process_v2` is set, the screenshot pipeline has no native image libs, the free tier caps *CPU-time* at 10 ms/request (a heavy render can exceed it), and local dev (Node 22, via the project's Dockerized `make dev`) diverges from prod (`workerd`). Note: the `cloudflare-pages` hand-off is stale — `@astrojs/cloudflare` v14 is **Workers-only**; if Cloudflare is ever reconsidered, the target is Workers with `wrangler deploy`, not Pages.
+The original leader on familiarity + truly-unrestricted cost ($0 free / $5 clean paid, no license strings, no egress fees), and still the strongest on those two axes. Demoted to third by the developer's own decision after the cross-check exposed SSR-on-`workerd` friction specific to this stack. **Gap vs. the recommendation:** `workerd` is not Node — `@supabase/ssr` needs `nodejs_compat`, SSR routes can silently return `[object Object]` until `disable_nodejs_process_v2` is set, the screenshot pipeline has no native image libs, the free tier caps *CPU-time* at 10 ms/request (a heavy render can exceed it), and local dev (Node, via native `npm run dev`) diverges from prod (`workerd`). Note: the `cloudflare-pages` hand-off is stale — `@astrojs/cloudflare` v14 is **Workers-only**; if Cloudflare is ever reconsidered, the target is Workers with `wrangler deploy`, not Pages.
 
 ## Anti-Bias Cross-Check: Vercel
 
@@ -118,14 +118,14 @@ Every row names the lens that surfaced it, so a future reader can audit *why* it
 
 ## Getting Started
 
-Version-accurate for `@astrojs/vercel` v10 on Astro 6 with the project's Dockerized local-dev setup — **not** copied from platform marketing.
+Version-accurate for `@astrojs/vercel` v10 on Astro 6 with the project's native local-dev setup — **not** copied from platform marketing.
 
 1. **Add the adapter** (sets `output: 'server'` and wires the adapter for you):
    ```bash
    npx astro add vercel
    ```
    Import from the package root — `import vercel from '@astrojs/vercel'` — **not** the removed `@astrojs/vercel/serverless` subpath.
-2. **Keep local dev as-is.** The Astro dev server already renders SSR routes and server endpoints faithfully, so `make dev` (the project's Dockerized `astro dev` on Node 22) stays the local loop — you do **not** need `vercel dev` for Astro. Local (Node 22) ≈ prod (Vercel Node functions), so behaviour matches, unlike the Cloudflare `workerd` path that was rejected.
+2. **Keep local dev as-is.** The Astro dev server already renders SSR routes and server endpoints faithfully, so `npm run dev` (the project's native `astro dev` on Node 22) stays the local loop — you do **not** need `vercel dev` for Astro. Local (Node 22) ≈ prod (Vercel Node functions), so behaviour matches, unlike the Cloudflare `workerd` path that was rejected.
 3. **Instantiate Supabase per-request.** In every server endpoint / middleware, create the `@supabase/ssr` client *inside* the handler (cookie-based, PKCE) — never at module scope. This is the single most important correctness step (see risk register).
 4. **Set the generation endpoint's duration and confirm Fluid Compute.** Give the flashcard-generation route an explicit `maxDuration` (e.g. 60) via Astro's Vercel adapter config, and confirm Fluid Compute is enabled on the project so the free tier's 300s ceiling applies.
 5. **Wire deploys via Git integration** (simplest, matches `auto-deploy-on-merge`): import the repo in Vercel, set `SUPABASE_URL`, `SUPABASE_KEY`, and the LLM API key as environment variables (Production + Preview), and pin the project region to match the Supabase project region. Pushes to `main` deploy to production; PRs get preview URLs automatically. For CLI-driven deploys instead, use `vercel` (preview) / `vercel --prod` with a scoped `VERCEL_TOKEN`.
@@ -133,7 +133,7 @@ Version-accurate for `@astrojs/vercel` v10 on Astro 6 with the project's Dockeri
 ## Out of Scope
 
 The following were not evaluated in this research:
-- Docker **image** configuration and Dockerfiles (the project's Docker setup is local-dev only; production is Vercel serverless, not containerized).
+- Docker **image** configuration and Dockerfiles (the project runs natively in local dev and deploys to Vercel serverless — nothing is containerized).
 - CI/CD pipeline authoring (Vercel's Git integration covers auto-deploy; a bespoke GitHub Actions deploy job is optional).
 - Production-scale architecture — multi-region, high-availability, disaster recovery.
 - The Supabase data/auth/storage layer's own hosting and scaling (external managed service; billed separately).

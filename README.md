@@ -74,48 +74,20 @@ npm run dev
 
 This project uses [Supabase](https://supabase.com/) for authentication. Environment variables are declared via Astro's `astro:env` schema and are treated as **server-only secrets** — they are never exposed to the client.
 
-### First-time setup (local, no cloud project needed)
+Local development runs natively (`npm run dev`) against a **hosted Supabase project** — there is no Docker-based local stack to run.
 
-Requires [Docker](https://www.docker.com/) and ~7 GB RAM.
+### Setup (hosted Supabase project)
 
-1. Create your `.env` file:
+1. Create a project at [supabase.com](https://supabase.com/) (or reuse an existing one).
+
+2. Create your env files from the example:
 
 ```bash
 cp .env.example .env
+cp .env.example .dev.vars
 ```
 
-2. Initialize the local Supabase project (creates a `supabase/` config folder):
-
-```bash
-npx supabase init
-```
-
-3. Start the local stack (downloads Docker images on first run):
-
-```bash
-npx supabase start
-```
-
-4. Copy the credentials printed by the CLI into your `.env` and `.dev.vars`:
-
-```
-SUPABASE_URL=http://127.0.0.1:54321
-SUPABASE_KEY=<anon key from CLI output>
-```
-
-5. To stop the stack when done:
-
-```bash
-npx supabase stop
-```
-
-The local Studio UI is available at `http://localhost:54323`.
-
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
-
-### Using a cloud Supabase project instead
-
-If you prefer to use a hosted Supabase project, add these variables to your `.env` and `.dev.vars` files:
+3. From the Supabase dashboard → **Settings → API**, copy the values into both files:
 
 | Variable       | Description                                                |
 | -------------- | ---------------------------------------------------------- |
@@ -127,7 +99,17 @@ SUPABASE_URL=https://<project-ref>.supabase.co
 SUPABASE_KEY=<anon-key>
 ```
 
-### Email confirmation in local development
+4. Run the dev server:
+
+```bash
+npm run dev
+```
+
+No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+
+> The `supabase` CLI (a devDependency) and `supabase/config.toml` are kept in the repo for optional use — migrations or `supabase link` against your hosted project. Running the full Supabase stack locally in Docker (`supabase start`) is no longer part of the setup.
+
+### Email confirmation
 
 By default Supabase requires email confirmation before a user can sign in. To skip this during local development:
 
