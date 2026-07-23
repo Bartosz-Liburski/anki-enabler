@@ -263,25 +263,25 @@ extend these tables with their own additive migrations rather than editing this 
 #### Automated
 
 - [x] 1.1 Migration file exists — 0869c94
-- [x] 1.2 Migration applies cleanly to the linked project (`supabase db push`)
-- [x] 1.3 Types file exists and is non-empty
+- [x] 1.2 Migration applies cleanly to the linked project (`supabase db push`) — 37b6916
+- [x] 1.3 Types file exists and is non-empty — 37b6916
 - [x] 1.4 Type checking passes (`astro sync && astro check`) — 0869c94
 - [x] 1.5 Linting passes (`npm run lint`) — 0869c94
 
 #### Manual
 
-- [ ] 1.6 Confirmed `SUPABASE_KEY` is the anon/publishable key, not service_role
-- [ ] 1.7 Both tables show RLS enabled with exactly one policy each in Studio
-- [ ] 1.8 `database.types.ts` reflects both tables with expected columns
+- [ ] 1.6 Confirmed `SUPABASE_KEY` is the anon/publishable key, not service_role — FOLLOW-UP: `.env` currently holds a non-API-key value (looks like the DB password); set the real anon/publishable key. App-config, tracked separately from this change's proven DB isolation.
+- [x] 1.7 Both tables show RLS enabled with exactly one policy each in Studio
+- [x] 1.8 `database.types.ts` reflects both tables with expected columns
 
 ### Phase 2: Repeatable Isolation Verification
 
 #### Automated
 
 - [x] 2.1 Isolation script file exists — 4ccf508
-- [x] 2.2 Script runs green against the linked project (all assertions pass)
+- [x] 2.2 Script runs green against the linked project (all assertions pass) — 37b6916
 
 #### Manual
 
-- [ ] 2.3 Weakened-policy run confirms the script actually fails (non-vacuous)
-- [ ] 2.4 Source→flashcards cascade confirmed on delete
+- [x] 2.3 Weakened-policy run confirms the script actually fails (non-vacuous)
+- [x] 2.4 Source→flashcards cascade confirmed on delete

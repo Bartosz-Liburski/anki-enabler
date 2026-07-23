@@ -100,6 +100,11 @@ begin
   select count(*) into n from public.sources;
   if n <> 1 then raise exception 'ISOLATION FAILURE: user A sees % sources, expected exactly 1', n; end if;
 
+  -- 7. Cascade (FR-006): deleting user A's source removes its flashcards.
+  delete from public.sources where id = src_a;
+  select count(*) into n from public.flashcards where source_id = src_a;
+  if n <> 0 then raise exception 'CASCADE FAILURE: % flashcards survived deletion of their source', n; end if;
+
   -- --- Cleanup (back to privileged role) ----------------------------------
   reset role;
   delete from auth.users where id in (user_a, user_b);  -- cascades to sources + flashcards
