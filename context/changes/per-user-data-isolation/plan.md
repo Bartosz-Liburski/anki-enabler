@@ -262,11 +262,11 @@ extend these tables with their own additive migrations rather than editing this 
 
 #### Automated
 
-- [x] 1.1 Migration file exists
+- [x] 1.1 Migration file exists — 0869c94
 - [ ] 1.2 Migration applies cleanly to the linked project (`supabase db push`)
 - [ ] 1.3 Types file exists and is non-empty
-- [x] 1.4 Type checking passes (`astro sync && astro check`)
-- [x] 1.5 Linting passes (`npm run lint`)
+- [x] 1.4 Type checking passes (`astro sync && astro check`) — 0869c94
+- [x] 1.5 Linting passes (`npm run lint`) — 0869c94
 
 #### Manual
 
@@ -278,7 +278,7 @@ extend these tables with their own additive migrations rather than editing this 
 
 #### Automated
 
-- [ ] 2.1 Isolation script file exists
+- [x] 2.1 Isolation script file exists
 - [ ] 2.2 Script runs green against the linked project (all assertions pass)
 
 #### Manual
