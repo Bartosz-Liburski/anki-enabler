@@ -70,6 +70,8 @@ const astroConfig = tseslint.config({
 
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
+  // Supabase-generated schema types — do not lint/format generated output.
+  { ignores: ["src/db/database.types.ts"] },
   baseConfig,
   reactConfig,
   eslintPluginAstro.configs["flat/recommended"],

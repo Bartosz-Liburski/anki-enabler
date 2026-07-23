@@ -38,5 +38,11 @@ requirements keep it intact:
 - Every new user-owned table must `enable row level security` and carry an owner policy
   checking `auth.uid() = user_id` in both `using` and `with check`.
 
-After any schema or RLS change, re-run the isolation check `supabase/tests/isolation.sql`
-(see that file's header for the invocation) to confirm no cross-user access path exists.
+After any schema or RLS change, re-run the isolation check to confirm no cross-user access
+path exists:
+
+```bash
+npx supabase db query --file supabase/tests/isolation.sql --linked
+```
+
+A clean (non-error) run means isolation holds; any raised exception names the breach.
