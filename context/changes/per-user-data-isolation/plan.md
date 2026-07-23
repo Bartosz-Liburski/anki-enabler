@@ -271,8 +271,8 @@ extend these tables with their own additive migrations rather than editing this 
 #### Manual
 
 - [ ] 1.6 Confirmed `SUPABASE_KEY` is the anon/publishable key, not service_role — FOLLOW-UP: `.env` currently holds a non-API-key value (looks like the DB password); set the real anon/publishable key. App-config, tracked separately from this change's proven DB isolation.
-- [x] 1.7 Both tables show RLS enabled with exactly one policy each in Studio
-- [x] 1.8 `database.types.ts` reflects both tables with expected columns
+- [x] 1.7 Both tables show RLS enabled with exactly one policy each in Studio — f35d7b7
+- [x] 1.8 `database.types.ts` reflects both tables with expected columns — f35d7b7
 
 ### Phase 2: Repeatable Isolation Verification
 
@@ -283,5 +283,5 @@ extend these tables with their own additive migrations rather than editing this 
 
 #### Manual
 
-- [x] 2.3 Weakened-policy run confirms the script actually fails (non-vacuous)
-- [x] 2.4 Source→flashcards cascade confirmed on delete
+- [x] 2.3 Weakened-policy run confirms the script actually fails (non-vacuous) — f35d7b7
+- [x] 2.4 Source→flashcards cascade confirmed on delete — f35d7b7
