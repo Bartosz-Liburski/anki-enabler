@@ -278,7 +278,7 @@ extend these tables with their own additive migrations rather than editing this 
 
 #### Automated
 
-- [x] 2.1 Isolation script file exists
+- [x] 2.1 Isolation script file exists — 4ccf508
 - [ ] 2.2 Script runs green against the linked project (all assertions pass)
 
 #### Manual
