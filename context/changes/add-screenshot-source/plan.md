@@ -416,11 +416,11 @@ the migration would need a backfill/default first. The bucket insert is idempote
 
 #### Automated
 
-- [ ] 1.1 Migration file exists
-- [ ] 1.2 Migration applies cleanly to the linked project (`supabase db push`)
-- [ ] 1.3 Types file reflects new columns (`grep learned_language`)
-- [ ] 1.4 Type checking passes (`astro sync && astro check`)
-- [ ] 1.5 Linting passes (`npm run lint`)
+- [x] 1.1 Migration file exists
+- [x] 1.2 Migration applies cleanly to the linked project (`supabase db push`)
+- [x] 1.3 Types file reflects new columns (`grep learned_language`)
+- [x] 1.4 Type checking passes (`astro sync && astro check`)
+- [x] 1.5 Linting passes (`npm run lint`)
 
 #### Manual
 
