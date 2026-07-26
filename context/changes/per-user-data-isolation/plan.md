@@ -270,7 +270,7 @@ extend these tables with their own additive migrations rather than editing this 
 
 #### Manual
 
-- [ ] 1.6 Confirmed `SUPABASE_KEY` is the anon/publishable key, not service_role — FOLLOW-UP: `.env` currently holds a non-API-key value (looks like the DB password); set the real anon/publishable key. App-config, tracked separately from this change's proven DB isolation.
+- [x] 1.6 Confirmed `SUPABASE_KEY` is the anon/publishable key, not service_role — resolved 2026-07-26: `.env` now holds the `sb_publishable_…` key; verified against the live project (`auth/v1/health` 200; anon `rest/v1/sources` returns `[]`, proving a valid anon key with RLS active).
 - [x] 1.7 Both tables show RLS enabled with exactly one policy each in Studio — f35d7b7
 - [x] 1.8 `database.types.ts` reflects both tables with expected columns — f35d7b7
 

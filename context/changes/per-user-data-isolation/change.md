@@ -22,9 +22,9 @@ See `plan.md` for the implementation contract and `plan-brief.md` for the two-pa
 
 ## Follow-up (out of this change)
 
-- **`.env` `SUPABASE_KEY` is not a valid anon/publishable API key** (it looks like the DB
-  password). DB-level per-user isolation is proven, but the app's Supabase client won't
-  authenticate correctly until `SUPABASE_KEY` holds the real anon/publishable key
-  (Supabase dashboard → Project Settings → API → `anon` `public`). Manual check 1.6 is
-  intentionally left unchecked pending this app-config fix.
+- ~~**`.env` `SUPABASE_KEY` is not a valid anon/publishable API key** (it looks like the DB
+  password).~~ **Resolved 2026-07-26** — `.env` now holds the real `sb_publishable_…`
+  anon/publishable key; verified against the live project (`auth/v1/health` 200; anon
+  `rest/v1/sources` returns `[]`, confirming a valid anon key with RLS active). Manual
+  check 1.6 is now ticked.
 
