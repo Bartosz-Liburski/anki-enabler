@@ -532,27 +532,27 @@ the migration would need a backfill/default first. The bucket insert is idempote
 
 #### Manual
 
-- [x] 2.4 Valid png creates a `sources` row + object under `{user_id}/…`
-- [x] 2.5 Oversized file and wrong format each rejected with `?error=`, no row/object
-- [x] 2.6 Unauthenticated POST redirects to `/auth/signin`
-- [x] 2.7 Failed insert leaves no orphaned object (cleanup works)
+- [x] 2.4 Valid png creates a `sources` row + object under `{user_id}/…` — b953484
+- [x] 2.5 Oversized file and wrong format each rejected with `?error=`, no row/object — b953484
+- [x] 2.6 Unauthenticated POST redirects to `/auth/signin` — b953484
+- [x] 2.7 Failed insert leaves no orphaned object (cleanup works) — b953484
 
 ### Phase 3: Dashboard Upload Form
 
 #### Automated
 
-- [x] 3.1 Form components exist (`AddSourceForm`, `LanguagePairForm`, `SelectField`, `FileField`)
-- [x] 3.2 Helpers exist (`source-errors.ts`, `source-pair.ts`)
-- [x] 3.3 Type checking passes (`astro sync && astro check`)
-- [x] 3.4 Linting passes (`npm run lint`)
-- [x] 3.5 Production build passes (`npm run build`)
+- [x] 3.1 Form components exist (`AddSourceForm`, `LanguagePairForm`, `SelectField`, `FileField`) — b953484
+- [x] 3.2 Helpers exist (`source-errors.ts`, `source-pair.ts`) — b953484
+- [x] 3.3 Type checking passes (`astro sync && astro check`) — b953484
+- [x] 3.4 Linting passes (`npm run lint`) — b953484
+- [x] 3.5 Production build passes (`npm run build`) — b953484
 
 #### Manual
 
-- [x] 3.6 Pair picker shows first; upload form only after a valid pair
-- [x] 3.7 Client fast-fails on oversized / wrong-format file without POSTing
-- [x] 3.8 Valid submission creates the source and returns with the pair still selected + success
-- [x] 3.9 Success/error banner renders from the query param
-- [x] 3.10 Pair survives closing the tab; `Change` returns to the picker
-- [x] 3.11 `Leave dashboard` returns to the landing page
-- [x] 3.12 No regression: `/dashboard` protection and sign-out still work
+- [x] 3.6 Pair picker shows first; upload form only after a valid pair — b953484
+- [x] 3.7 Client fast-fails on oversized / wrong-format file without POSTing — b953484
+- [x] 3.8 Valid submission creates the source and returns with the pair still selected + success — b953484
+- [x] 3.9 Success/error banner renders from the query param — b953484
+- [x] 3.10 Pair survives closing the tab; `Change` returns to the picker — b953484
+- [x] 3.11 `Leave dashboard` returns to the landing page — b953484
+- [x] 3.12 No regression: `/dashboard` protection and sign-out still work — b953484
