@@ -54,11 +54,15 @@ endpoint / file upload** — plus the dashboard's first real interaction.
 
 A signed-in user, on the dashboard, can:
 
-- Pick a screenshot (png/jpeg, ≤ 5 MB), choose the language being learned and the language
-  they already know from curated dropdowns, and submit.
-- On success, land back on the dashboard with a confirmation; the image is stored privately
-  in Supabase Storage under their own user-id path, and a `sources` row records
-  `type='screenshot'`, `image_path`, `learned_language`, `known_language`, and `user_id`.
+- Set the **learning direction once** — the language being learned plus the language they
+  already know, from curated dropdowns — and then add **many** screenshots to that pair in a
+  row without re-picking it. The pair survives closing the tab; `Change` returns to the
+  picker.
+- Pick a screenshot (png/jpeg, ≤ 5 MB) for the selected pair and submit.
+- On success, land back on the dashboard **with the pair still selected** and a confirmation;
+  the image is stored privately in Supabase Storage under their own user-id path, and a
+  `sources` row records `type='screenshot'`, `image_path`, `learned_language`,
+  `known_language`, and `user_id`.
 - On a too-large or wrong-format file, be rejected **before** any upload/insert, with a
   clear message — the size/format cap is honored at the client, the endpoint, and the bucket.
 - Never reach another user's sources or stored images (per-user RLS on the table + owner
@@ -91,6 +95,10 @@ no row/object created; sign in as a second user → cannot list the first user's
 - **No plain-text source path** (S-05, FR-004) — but the `type` column is added now with a
   `'screenshot'` default so S-05 is a purely additive follow-on.
 - **No source editing** (PRD Non-Goal) — sources are add-only here.
+- **No `decks` table** — the language pair is a *selection* (URL param + recall cookie), not a
+  persisted entity. Every source still carries its own pair columns, per the roadmap's
+  "per-source learning direction". A real deck entity belongs to S-04.
+- **No source count / list for the selected pair** — that is listing, which S-04 owns.
 - **No multiple known languages** — a single `known_language` per source (decision below).
 - **No image processing** — no resize/thumbnail/OCR; the file is stored as-is.
 - **No new test framework** — verification is `astro check` + `lint` + the manual steps.
@@ -105,9 +113,35 @@ types are then regenerated and the shared client is typed with `<Database>`. A n
 `POST /api/sources` endpoint (following the existing `formData()` + redirect convention)
 auth-guards, validates size/format against a **single shared limit constant**, uploads the
 file to `{user_id}/{id}.{ext}`, inserts the row, and redirects to the dashboard with a
-success or error signal. Finally, the dashboard gains an inline upload-form island (curated
-language Selects + file input) that fast-fails on size/format client-side before the native
-POST, and reads a `?success=`/`?error=` query param to surface the outcome.
+success or error signal **plus the language pair**. Finally, the dashboard splits into two
+steps: a pair picker that submits as a plain `GET` to `/dashboard`, and — once the URL carries
+a valid pair — an upload island that fast-fails on size/format client-side before the native
+POST. The URL is the rendering source of truth; middleware mirrors the pair into a cookie for
+recall, and the page reads `?success=`/`?error=` to surface the outcome.
+
+## Amendments During Implementation
+
+Recorded after the fact, on the user's instruction, so the plan matches what shipped:
+
+1. **Two separate steps instead of one form.** The pair is chosen first and then takes many
+   uploads in a row (user request). Mechanism: step 1 is a `GET` form to `/dashboard` whose
+   field names *are* the query-param names, so no mapping code exists; `POST /api/sources`
+   echoes the pair on every redirect. A cookie (`anki_source_pair`, re-validated on read)
+   restores the pair after a tab close. No schema change — `sources` keeps its own pair columns,
+   so the roadmap's "per-source learning direction" still holds and no `decks` entity appears.
+2. **No shadcn Input/Label/Select.** The existing auth forms use hand-rolled styled native
+   inputs (`FormField.tsx`), not shadcn primitives, so Radix Select would have made the two
+   language fields behave unlike every other field in the app — and it needs JS to pick a value,
+   breaking the progressive-enhancement fallback this plan leans on. Native `<select>` /
+   `<input type="file">` under `src/components/sources/` instead; no new dependency.
+3. **Pair recall lives in middleware, not the page.** `return Astro.redirect(...)` in `.astro`
+   frontmatter crashes ESLint — `@typescript-eslint/no-misused-promises` hits a top-level
+   `return` with no parent node (`Non-null Assertion Failed`). Middleware is an ordinary
+   function, so the redirect is safe there, and the page then renders from the URL alone.
+4. **Outcome codes are a shared module** (`src/lib/source-errors.ts`) rather than string
+   literals duplicated between the endpoint and the dashboard, so a renamed code fails type
+   checking instead of silently rendering an empty banner.
+5. **`Leave dashboard` link added** (to `/`), alongside the existing sign-out.
 
 ## Critical Implementation Details
 
@@ -256,15 +290,22 @@ user, and redirect back to the dashboard with the outcome.
 - Build the per-request client (`createClient(context.request.headers, context.cookies)`);
   if null or `context.locals.user` is absent → redirect `"/auth/signin"`.
 - Read `context.request.formData()`: `file` (File), `learned_language`, `known_language`.
-- Validate: file present; `file.size <= MAX_UPLOAD_BYTES`; `file.type` in
-  `ACCEPTED_IMAGE_TYPES`; both languages members of the curated list and not equal to each
-  other. On any failure → `redirect("/dashboard?error=<code>")` **before** any upload/insert.
+- Validate **languages first** — both members of the curated list and not equal to each other —
+  because every subsequent redirect echoes the pair back to the dashboard, and a redirect must
+  not echo a pair it has not verified. Failures here → `redirect("/dashboard?error=<code>")`.
+- Then validate the file: present; `file.size <= MAX_UPLOAD_BYTES`; `file.type` in
+  `ACCEPTED_IMAGE_TYPES`. On failure → `redirect("/dashboard?<pair>&error=<code>")` **before**
+  any upload/insert.
 - Generate `id` (uuid); derive extension from mime; upload to the `screenshots` bucket at
   `${user.id}/${id}.${ext}` via `supabase.storage.from('screenshots').upload(...)`.
 - Insert `sources` row `{ id, user_id: user.id, type: 'screenshot', image_path,
   learned_language, known_language }`. If insert fails → best-effort remove the uploaded
-  object, then `redirect("/dashboard?error=…")`.
-- On success → `redirect("/dashboard?success=source-added")`.
+  object, then `redirect("/dashboard?<pair>&error=…")`.
+- On success → `redirect("/dashboard?<pair>&success=source-added")` — carrying the pair is what
+  leaves the next upload ready without re-picking it.
+
+Error codes come from `src/lib/source-errors.ts` (added in Phase 3) and the dashboard URL is
+built by `dashboardUrl()` from `src/lib/source-pair.ts`, so param names are spelled once.
 
 Follows the existing auth-route shape (single `context` arg, `formData()`, redirect-based
 responses) — no JSON responses.
@@ -294,61 +335,113 @@ of the upload/validation/isolation behavior before proceeding to Phase 3.
 
 ### Overview
 
-Give the dashboard its first real interaction: an inline upload-form island with curated
-language Selects and a file input, client-side fast-fail on size/format, wired to the
-endpoint, with the success/error outcome surfaced from the query param.
+Give the dashboard its first real interaction, as **two steps**: pick the learning direction
+once, then add as many screenshots to that pair as wanted. Client-side fast-fail on
+size/format, outcome surfaced from the query param, and the pair remembered across tab closes.
 
 ### Changes Required:
 
-#### 1. Add shadcn form primitives
+#### 1. Native form primitives
 
-**File**: `src/components/ui/{input,label,select}.tsx` (new, via `npx shadcn add input label select`)
+**File**: `src/components/sources/{SelectField,FileField}.tsx` (new)
 
-**Intent**: Provide the Input/Label/Select the form needs; none are installed yet.
+**Intent**: Provide the dropdown and file controls the two forms need, matching the app's
+existing field look.
 
-**Contract**: Standard shadcn (new-york) components under `@/components/ui`. Select backs the
-two language dropdowns; Input backs the file field (or a styled native `<input type="file">`).
+**Contract**: Hand-rolled, styled native `<select>` and `<input type="file">`, mirroring
+`src/components/auth/FormField.tsx` (label, leading icon, error text, `cn()` variants). Native
+rather than shadcn/Radix — see Amendment 2 — so the controls also carry their value when the
+island has not hydrated. `FileField` renders `accept` from the shared constant and shows the
+picked file's name/size; `accept` is a hint only, never a substitute for the real checks.
 
-#### 2. Upload-form island
+#### 2. Step 1 — language-pair picker
+
+**File**: `src/components/sources/LanguagePairForm.tsx` (new)
+
+**Intent**: Choose the learning direction, and put it in the URL so it can be carried forward.
+
+**Contract**: A `client:load` island rendering `<form method="GET" action="/dashboard">` with
+two `SelectField`s populated from `src/lib/languages.ts`. The field names are
+`learned_language` / `known_language` — i.e. **the query-param names** — so the browser builds
+`/dashboard?learned_language=…&known_language=…` with no mapping code and the step works with
+JS disabled. `handleSubmit` blocks empty or identical pairs with inline errors. Prefills from
+props so `?pair=change` can seed the previous values.
+
+#### 3. Step 2 — upload island
 
 **File**: `src/components/sources/AddSourceForm.tsx` (new)
 
-**Intent**: A `client:load` React island that collects file + both languages, fast-fails on
-size/format before submitting, and otherwise lets the browser natively POST to the endpoint.
+**Intent**: Upload a screenshot into the already-chosen pair; ready for the next one right
+after.
 
-**Contract**: A real `<form method="POST" action="/api/sources"
-encType="multipart/form-data" noValidate>` with controlled state, modeling `SignUpForm.tsx`:
-- Two `Select`s populated from `src/lib/languages.ts`; a file input.
-- `handleSubmit` validates against `MAX_UPLOAD_BYTES` / `ACCEPTED_IMAGE_TYPES` (shared
-  constant) and language membership; on failure `e.preventDefault()` and show inline errors
-  (reuse the `FormField`/`ServerError` error style); on success let the native POST proceed.
-- `SubmitButton` for the pending state.
+**Contract**: A `client:load` island rendering a real `<form method="POST"
+action="/api/sources" encType="multipart/form-data" noValidate>`:
+- The pair arrives via props and rides along as two `<input type="hidden">` fields, so the form
+  holds **no** language state.
+- One `FileField`; `handleSubmit` validates against `MAX_UPLOAD_BYTES` / `ACCEPTED_IMAGE_TYPES`
+  (shared constant), `e.preventDefault()` + inline error on failure, otherwise the native POST
+  proceeds.
+- `ServerError` for the redirected error, `SubmitButton` for the pending state.
 
-#### 3. Mount the form + surface outcome on the dashboard
+#### 4. Outcome codes module
+
+**File**: `src/lib/source-errors.ts` (new)
+
+**Intent**: One home for the `?error=` / `?success=` vocabulary shared by the endpoint and the
+dashboard.
+
+**Contract**: Exports the `SourceErrorCode` union, a `Record<SourceErrorCode, string>` message
+map, the success code/message, and `sourceErrorMessage(code)` which falls back to a generic
+message for an unrecognised (user-supplied) code rather than rendering an empty banner.
+
+#### 5. Pair persistence + URL helpers
+
+**File**: `src/lib/source-pair.ts` (new), `src/middleware.ts`
+
+**Intent**: Let the chosen pair survive closing the tab, without giving the dashboard a second
+source of truth to render from.
+
+**Contract**: `source-pair.ts` exports `isValidPair`, the `anki_source_pair` cookie
+read/write/clear helpers (`httpOnly`, `sameSite=lax`, `secure` in prod, 1-year `maxAge`), and
+`dashboardUrl()` / `dashboardPairUrl()`. Cookie values are **re-validated** against the curated
+list on read — a cookie is client-supplied. `middleware.ts`, for `/dashboard` only and *after*
+the existing auth guard: `?pair=change` clears the cookie; a valid pair in the URL is written to
+it; otherwise a remembered pair redirects to the canonical pair URL. Lives in middleware, not
+the page — see Amendment 3.
+
+#### 6. Two-step dashboard + outcome banners
 
 **File**: `src/pages/dashboard.astro`
 
-**Intent**: Render the form island and show the success/error banner from the redirect.
+**Intent**: Branch on the pair, render the right step, and show the outcome.
 
-**Contract**: Read `success`/`error` from `Astro.url.searchParams` (mirroring
-`auth/signin.astro:5`), render `<AddSourceForm client:load />` in the existing card, and show
-a success confirmation or an error message (reuse `ServerError`, add a success variant or a
-simple styled banner). No source list is rendered (S-04 owns browse).
+**Contract**: Read `learned_language` / `known_language` from `Astro.url.searchParams` (mirroring
+`auth/signin.astro:5`) — the URL is the only rendering input. Without a valid pair render
+`<LanguagePairForm client:load />`; with one render a pair header (`Learning direction`,
+`Spanish → Polish`) plus a `Change` link to `/dashboard?pair=change` and
+`<AddSourceForm client:load />`. Show a green success banner from `?success=` and the error from
+`?error=` (via `sourceErrorMessage`). Add a `Leave dashboard` link to `/` beside sign-out. No
+source list or count is rendered (S-04 owns browse).
 
 ### Success Criteria:
 
 #### Automated Verification:
 
-- Components exist: `ls src/components/sources/AddSourceForm.tsx src/components/ui/select.tsx`
+- Components exist: `ls src/components/sources/{AddSourceForm,LanguagePairForm,SelectField,FileField}.tsx`
+- Helpers exist: `ls src/lib/source-errors.ts src/lib/source-pair.ts`
 - Type checking passes: `npx astro sync && npx astro check`
 - Linting passes: `npm run lint`
+- Production build passes: `npm run build`
 
 #### Manual Verification:
 
-- The dashboard shows the upload form with two language dropdowns and a file input
+- The dashboard first shows the pair picker, and only then the upload form
 - Selecting a > 5 MB file or a non-png/jpeg file shows an inline error and does **not** POST
-- A valid submission creates the source and returns to the dashboard with a success confirmation
+- A valid submission creates the source and returns with the pair still selected + a success
+  confirmation, ready for the next screenshot
 - The success/error banner renders correctly from the `?success=`/`?error=` param
+- The pair survives closing the tab; `Change` returns to the picker and stops remembering it
+- `Leave dashboard` returns to the landing page
 - No regression: sign-out and route protection on `/dashboard` still work
 
 **Implementation Note**: After Phase 3 passes, S-01 is complete and S-02
@@ -433,29 +526,33 @@ the migration would need a backfill/default first. The bucket insert is idempote
 
 #### Automated
 
-- [x] 2.1 Endpoint + helper files exist
-- [x] 2.2 Type checking passes (`astro sync && astro check`)
-- [x] 2.3 Linting passes (`npm run lint`)
+- [x] 2.1 Endpoint + helper files exist — 58cb098
+- [x] 2.2 Type checking passes (`astro sync && astro check`) — 58cb098
+- [x] 2.3 Linting passes (`npm run lint`) — 58cb098
 
 #### Manual
 
-- [ ] 2.4 Valid png creates a `sources` row + object under `{user_id}/…`
-- [ ] 2.5 Oversized file and wrong format each rejected with `?error=`, no row/object
-- [ ] 2.6 Unauthenticated POST redirects to `/auth/signin`
-- [ ] 2.7 Failed insert leaves no orphaned object (cleanup works)
+- [x] 2.4 Valid png creates a `sources` row + object under `{user_id}/…`
+- [x] 2.5 Oversized file and wrong format each rejected with `?error=`, no row/object
+- [x] 2.6 Unauthenticated POST redirects to `/auth/signin`
+- [x] 2.7 Failed insert leaves no orphaned object (cleanup works)
 
 ### Phase 3: Dashboard Upload Form
 
 #### Automated
 
-- [ ] 3.1 Components exist (`AddSourceForm.tsx`, `ui/select.tsx`)
-- [ ] 3.2 Type checking passes (`astro sync && astro check`)
-- [ ] 3.3 Linting passes (`npm run lint`)
+- [x] 3.1 Form components exist (`AddSourceForm`, `LanguagePairForm`, `SelectField`, `FileField`)
+- [x] 3.2 Helpers exist (`source-errors.ts`, `source-pair.ts`)
+- [x] 3.3 Type checking passes (`astro sync && astro check`)
+- [x] 3.4 Linting passes (`npm run lint`)
+- [x] 3.5 Production build passes (`npm run build`)
 
 #### Manual
 
-- [ ] 3.4 Dashboard shows the upload form (two language dropdowns + file input)
-- [ ] 3.5 Client fast-fails on oversized / wrong-format file without POSTing
-- [ ] 3.6 Valid submission creates the source and returns with a success confirmation
-- [ ] 3.7 Success/error banner renders from the query param
-- [ ] 3.8 No regression: `/dashboard` protection and sign-out still work
+- [x] 3.6 Pair picker shows first; upload form only after a valid pair
+- [x] 3.7 Client fast-fails on oversized / wrong-format file without POSTing
+- [x] 3.8 Valid submission creates the source and returns with the pair still selected + success
+- [x] 3.9 Success/error banner renders from the query param
+- [x] 3.10 Pair survives closing the tab; `Change` returns to the picker
+- [x] 3.11 `Leave dashboard` returns to the landing page
+- [x] 3.12 No regression: `/dashboard` protection and sign-out still work

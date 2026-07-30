@@ -2,21 +2,10 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { isSupportedLanguage } from "@/lib/languages";
 import { MAX_UPLOAD_BYTES, extensionForImageType, isAcceptedImageType } from "@/lib/upload-limits";
+import { SOURCE_SUCCESS_CODE, type SourceErrorCode } from "@/lib/source-errors";
+import { dashboardUrl } from "@/lib/source-pair";
 
 const BUCKET = "screenshots";
-
-/**
- * Error codes surfaced through `?error=` on the dashboard, which owns their messages.
- * Kept short and stable so the redirect URL stays readable.
- */
-type SourceErrorCode =
-  | "file-missing"
-  | "file-too-large"
-  | "file-type"
-  | "language-invalid"
-  | "language-same"
-  | "upload-failed"
-  | "save-failed";
 
 /**
  * Create a screenshot source: validate, store the image, record the row (S-01).
@@ -26,6 +15,10 @@ type SourceErrorCode =
  * file never reaches Storage. The object is written to `{user_id}/...` — the `screenshots`
  * Storage policies key on that first path segment, so the convention is load-bearing for
  * per-user isolation, not cosmetic.
+ *
+ * Every redirect carries the language pair back to the dashboard so the chosen pair survives
+ * the round trip and the next screenshot can be added without picking it again. The languages
+ * are therefore validated first — a redirect cannot echo a pair that isn't trustworthy.
  */
 export const POST: APIRoute = async (context) => {
   const supabase = createClient(context.request.headers, context.cookies);
@@ -34,12 +27,25 @@ export const POST: APIRoute = async (context) => {
     return context.redirect("/auth/signin");
   }
 
-  const fail = (code: SourceErrorCode) => context.redirect(`/dashboard?error=${code}`);
-
   const form = await context.request.formData();
   const file = form.get("file");
   const learnedLanguage = form.get("learned_language");
   const knownLanguage = form.get("known_language");
+
+  if (
+    typeof learnedLanguage !== "string" ||
+    typeof knownLanguage !== "string" ||
+    !isSupportedLanguage(learnedLanguage) ||
+    !isSupportedLanguage(knownLanguage)
+  ) {
+    return context.redirect(dashboardUrl({ error: "language-invalid" }));
+  }
+  if (learnedLanguage === knownLanguage) {
+    return context.redirect(dashboardUrl({ error: "language-same" }));
+  }
+
+  const pair = { learned_language: learnedLanguage, known_language: knownLanguage };
+  const fail = (code: SourceErrorCode) => context.redirect(dashboardUrl({ ...pair, error: code }));
 
   if (!(file instanceof File) || file.size === 0) {
     return fail("file-missing");
@@ -49,17 +55,6 @@ export const POST: APIRoute = async (context) => {
   }
   if (!isAcceptedImageType(file.type)) {
     return fail("file-type");
-  }
-  if (
-    typeof learnedLanguage !== "string" ||
-    typeof knownLanguage !== "string" ||
-    !isSupportedLanguage(learnedLanguage) ||
-    !isSupportedLanguage(knownLanguage)
-  ) {
-    return fail("language-invalid");
-  }
-  if (learnedLanguage === knownLanguage) {
-    return fail("language-same");
   }
 
   // Generate the id up front so the object path and the row's primary key match.
@@ -88,5 +83,5 @@ export const POST: APIRoute = async (context) => {
     return fail("save-failed");
   }
 
-  return context.redirect("/dashboard?success=source-added");
+  return context.redirect(dashboardUrl({ ...pair, success: SOURCE_SUCCESS_CODE }));
 };
