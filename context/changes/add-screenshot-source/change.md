@@ -4,7 +4,7 @@ roadmap_id: S-01
 title: Add a screenshot source and set its learning direction
 status: implementing
 created: 2026-07-25
-updated: 2026-07-26
+updated: 2026-07-30
 prd_refs:
   - FR-002
   - FR-003

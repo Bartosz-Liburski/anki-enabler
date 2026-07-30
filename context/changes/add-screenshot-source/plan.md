@@ -416,18 +416,18 @@ the migration would need a backfill/default first. The bucket insert is idempote
 
 #### Automated
 
-- [x] 1.1 Migration file exists
-- [x] 1.2 Migration applies cleanly to the linked project (`supabase db push`)
-- [x] 1.3 Types file reflects new columns (`grep learned_language`)
-- [x] 1.4 Type checking passes (`astro sync && astro check`)
-- [x] 1.5 Linting passes (`npm run lint`)
+- [x] 1.1 Migration file exists — 9203743
+- [x] 1.2 Migration applies cleanly to the linked project (`supabase db push`) — 9203743
+- [x] 1.3 Types file reflects new columns (`grep learned_language`) — 9203743
+- [x] 1.4 Type checking passes (`astro sync && astro check`) — 9203743
+- [x] 1.5 Linting passes (`npm run lint`) — 9203743
 
 #### Manual
 
-- [ ] 1.6 `sources` shows the four new columns with defaults/checks in Studio
-- [ ] 1.7 `screenshots` bucket exists, is private, 5 MB + png/jpeg allowlist
-- [ ] 1.8 Four owner-scoped Storage policies present on `storage.objects`
-- [ ] 1.9 `SUPABASE_KEY` confirmed anon/publishable (not service_role)
+- [x] 1.6 `sources` shows the four new columns with defaults/checks in Studio
+- [x] 1.7 `screenshots` bucket exists, is private, 5 MB + png/jpeg allowlist
+- [x] 1.8 Four owner-scoped Storage policies present on `storage.objects`
+- [x] 1.9 `SUPABASE_KEY` confirmed anon/publishable (not service_role)
 
 ### Phase 2: Upload Endpoint
 
