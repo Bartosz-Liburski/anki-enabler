@@ -39,7 +39,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
       } else {
         const remembered = readPairCookie(context.cookies);
         if (remembered) {
-          return context.redirect(dashboardPairUrl(remembered));
+          return context.redirect(dashboardPairUrl(remembered, params));
         }
       }
     }

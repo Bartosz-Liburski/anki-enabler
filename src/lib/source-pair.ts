@@ -55,6 +55,22 @@ export function dashboardUrl(params: Record<string, string>): string {
   return `/dashboard?${new URLSearchParams(params).toString()}`;
 }
 
-export function dashboardPairUrl(pair: LanguagePair): string {
-  return dashboardUrl({ learned_language: pair.learnedLanguage, known_language: pair.knownLanguage });
+/**
+ * Canonical dashboard URL for a pair, preserving any outcome params from the URL being replaced.
+ *
+ * The endpoint's language-level failures redirect without a pair, so this recall redirect would
+ * otherwise swallow their `?error=` and leave the user on a silent dashboard.
+ */
+export function dashboardPairUrl(pair: LanguagePair, carryOver?: URLSearchParams): string {
+  const params: Record<string, string> = {
+    learned_language: pair.learnedLanguage,
+    known_language: pair.knownLanguage,
+  };
+
+  for (const key of ["error", "success"] as const) {
+    const value = carryOver?.get(key);
+    if (value) params[key] = value;
+  }
+
+  return dashboardUrl(params);
 }

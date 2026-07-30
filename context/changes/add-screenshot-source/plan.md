@@ -364,8 +364,9 @@ picked file's name/size; `accept` is a hint only, never a substitute for the rea
 two `SelectField`s populated from `src/lib/languages.ts`. The field names are
 `learned_language` / `known_language` — i.e. **the query-param names** — so the browser builds
 `/dashboard?learned_language=…&known_language=…` with no mapping code and the step works with
-JS disabled. `handleSubmit` blocks empty or identical pairs with inline errors. Prefills from
-props so `?pair=change` can seed the previous values.
+JS disabled. `handleSubmit` blocks empty or identical pairs with inline errors. Accepts optional
+prefill props; in practice they arrive empty, because `?pair=change` clears the recall cookie
+and the page reads only the URL — so the picker opens blank rather than seeded.
 
 #### 3. Step 2 — upload island
 
