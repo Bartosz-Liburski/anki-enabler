@@ -424,18 +424,18 @@ the migration would need a backfill/default first. The bucket insert is idempote
 
 #### Manual
 
-- [x] 1.6 `sources` shows the four new columns with defaults/checks in Studio
-- [x] 1.7 `screenshots` bucket exists, is private, 5 MB + png/jpeg allowlist
-- [x] 1.8 Four owner-scoped Storage policies present on `storage.objects`
-- [x] 1.9 `SUPABASE_KEY` confirmed anon/publishable (not service_role)
+- [x] 1.6 `sources` shows the four new columns with defaults/checks in Studio — dcbae16
+- [x] 1.7 `screenshots` bucket exists, is private, 5 MB + png/jpeg allowlist — dcbae16
+- [x] 1.8 Four owner-scoped Storage policies present on `storage.objects` — dcbae16
+- [x] 1.9 `SUPABASE_KEY` confirmed anon/publishable (not service_role) — dcbae16
 
 ### Phase 2: Upload Endpoint
 
 #### Automated
 
-- [ ] 2.1 Endpoint + helper files exist
-- [ ] 2.2 Type checking passes (`astro sync && astro check`)
-- [ ] 2.3 Linting passes (`npm run lint`)
+- [x] 2.1 Endpoint + helper files exist
+- [x] 2.2 Type checking passes (`astro sync && astro check`)
+- [x] 2.3 Linting passes (`npm run lint`)
 
 #### Manual
 
