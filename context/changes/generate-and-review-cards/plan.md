@@ -709,17 +709,17 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [ ] 1.1 Migration file exists
-- [ ] 1.2 Migration applies cleanly (`supabase db push`)
-- [ ] 1.3 Types reflect new columns (`grep discarded`)
-- [ ] 1.4 Type checking passes (`astro sync && astro check`)
-- [ ] 1.5 Linting passes (`npm run lint`)
+- [x] 1.1 Migration file exists
+- [x] 1.2 Migration applies cleanly (`supabase db push`)
+- [x] 1.3 Types reflect new columns (`grep discarded`)
+- [x] 1.4 Type checking passes (`astro sync && astro check`)
+- [x] 1.5 Linting passes (`npm run lint`)
 
 #### Manual
 
-- [ ] 1.6 `flashcards` shows `front`, `back`, `discarded` with the false default in Studio
-- [ ] 1.7 `sources` shows the three nullable generation-state columns with the confidence check
-- [ ] 1.8 F-01's `flashcards_owner_all` policy and `source_id` cascade unchanged
+- [x] 1.6 `flashcards` shows `front`, `back`, `discarded` with the false default in Studio
+- [x] 1.7 `sources` shows the three nullable generation-state columns with the confidence check
+- [x] 1.8 F-01's `flashcards_owner_all` policy and `source_id` cascade unchanged
 
 ### Phase 2: Generator Module
 

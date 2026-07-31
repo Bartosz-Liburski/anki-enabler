@@ -41,19 +41,28 @@ export type Database = {
     Tables: {
       flashcards: {
         Row: {
+          back: string
           created_at: string
+          discarded: boolean
+          front: string
           id: string
           source_id: string
           user_id: string
         }
         Insert: {
+          back: string
           created_at?: string
+          discarded?: boolean
+          front: string
           id?: string
           source_id: string
           user_id: string
         }
         Update: {
+          back?: string
           created_at?: string
+          discarded?: boolean
+          front?: string
           id?: string
           source_id?: string
           user_id?: string
@@ -71,27 +80,36 @@ export type Database = {
       sources: {
         Row: {
           created_at: string
+          extraction_confidence: string | null
+          generation_note: string | null
           id: string
           image_path: string | null
           known_language: string
+          last_generated_at: string | null
           learned_language: string
           type: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          extraction_confidence?: string | null
+          generation_note?: string | null
           id?: string
           image_path?: string | null
           known_language: string
+          last_generated_at?: string | null
           learned_language: string
           type?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          extraction_confidence?: string | null
+          generation_note?: string | null
           id?: string
           image_path?: string | null
           known_language?: string
+          last_generated_at?: string | null
           learned_language?: string
           type?: string
           user_id?: string
