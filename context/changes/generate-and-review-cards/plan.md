@@ -2,10 +2,17 @@
 
 ## Overview
 
-Roadmap slice **S-02**, the north star. Turn a stored screenshot source into a capped set of
-Q/A flashcards through **one Claude vision call with structured output**, then let the user
-review that set on a single screen and discard the weak cards. Re-generation replaces the set.
-A source that yields nothing shows an **explanatory state**, not a silent empty result.
+Roadmap slice **S-02**, the north star. Turn a stored screenshot source into Q/A flashcards
+through **one Claude vision call with structured output**, then let the user review the result on
+a single screen and discard the weak cards. Re-generation replaces the set. A source that yields
+nothing shows an **explanatory state**, not a silent empty result.
+
+**The expected output is one card.** A typical screenshot captures a single phrase or exchange
+worth learning, and that is one flashcard. Several cards are produced only when the source
+genuinely carries several distinct learnable items — a lyrics excerpt, a transcript, a dense
+exercise page — and the model decides that from the content. The 15-card cap is a **safety
+ceiling against runaway output, not a target**; see Critical Implementation Details for why that
+distinction is load-bearing rather than cosmetic.
 
 This slice introduces the project's entire LLM surface — SDK, API key, prompt, output schema,
 model selection, timeout budget — and its first multi-record write. It also builds the **eval
@@ -50,8 +57,10 @@ metric the MVP is judged on and no amount of documentation can substitute for la
 A signed-in user who has added a screenshot source can:
 
 - Land on that source's page directly after upload and trigger generation with one click.
-- Get up to **15** Q/A cards oriented learned → known, reusing a translation already present in
-  the screenshot when there is one and producing one when there isn't.
+- Get the cards that source actually warrants, oriented learned → known, reusing a translation
+  already present in the screenshot when there is one and producing one when there isn't. For a
+  typical screenshot that is **one card**; a text-heavy source may yield several, up to a ceiling
+  of 15.
 - Review the whole set on one screen, toggle **discard** per card, and save once. The kept cards
   are those not discarded — which is what S-03 will export.
 - Re-generate, replacing the set, with a confirmation step when cards would be lost.
@@ -61,8 +70,9 @@ A signed-in user who has added a screenshot source can:
   guardrail, deferred to this slice by S-01's plan).
 - Never reach another user's cards (per-user RLS carried from F-01, unchanged here).
 
-**How to verify:** generate from a real screenshot → 1..15 cards appear, front in the learned
-language, back in the known one; discard some, save, reload → the same cards stay discarded;
+**How to verify:** generate from an ordinary screenshot → one card appears, front in the learned
+language, back in the known one; generate from a text-heavy source → several cards, one per
+distinct item; discard some, save, reload → the same cards stay discarded;
 re-generate → confirmation appears, then a fresh set replaces the old; point at a screenshot
 with no foreign-language content → an explanation renders and survives a reload; run the eval
 harness → it prints a keep-rate against the labelled fixtures.
@@ -153,9 +163,17 @@ generate → review with no list in between.
 - **Ordering inside the replace is load-bearing too.** Delete the source's existing cards and
   insert the new set before updating `sources`' generation-state columns, so a failure can never
   leave `last_generated_at` pointing at a set that was never written.
-- **`max_tokens` must budget thinking.** Size it as roughly `15 × 80` tokens of card JSON plus
-  thinking headroom — start at **8000** — and treat `stop_reason === "max_tokens"` as a failure
-  to surface, never as a result to persist. Truncated JSON is the one failure that looks like
+- **A stated cap reads as a quota unless you say otherwise.** Tell a model "at most 15 cards"
+  and it will happily find fifteen things to say about a screenshot containing one phrase. Every
+  padded card is individually defensible and collectively worthless — and because the kept-rate
+  denominator counts them, quota-filling **attacks the ≥ 75% bar directly** while every single
+  card still looks correct in isolation. The prompt must lead with *one card unless the source
+  carries genuinely distinct items*, and the eval harness must score card **count**
+  appropriateness, not only card quality.
+- **`max_tokens` must budget thinking, not card volume.** Typical output is one card — under 100
+  tokens — so the budget exists almost entirely for adaptive thinking plus the pathological
+  15-card case. Start at **8000** and treat `stop_reason === "max_tokens"` as a failure to
+  surface, never as a result to persist. Truncated JSON is the one failure that looks like
   success to a careless parser.
 - **Hallucination is silent and repeatable.** `research-exa-ai.md:97-110` measured a model
   producing 16,400 characters from a page containing 660, consistently enough to survive casual
@@ -268,24 +286,40 @@ structured-output limitations.
 `emptyReason: string`. **Flat, and with no optional fields** — `emptyReason` is a required string
 that is empty when cards exist, because optional fields are the shape most likely to trip schema
 handling and a required-but-empty string costs one token. **No `.max()` on `cards`** — see
-Key Discoveries; the cap is enforced elsewhere. Also export `MAX_CARDS = 15`.
+Key Discoveries; the cap is enforced elsewhere. Also export `MAX_CARDS = 15`, named and commented
+as a **safety ceiling, not an expected or target count** — a future reader who mistakes it for a
+target will re-introduce the quota-filling failure the prompt is written to avoid.
 
 #### 3. Prompt
 
 **File**: `src/lib/llm/prompt.ts` (new)
 
-**Intent**: Build the system prompt carrying the learning direction, the card cap, the
-reuse-or-produce translation rule, and the explicit permission to return zero cards.
+**Intent**: Build the system prompt carrying the learning direction, the **one-card default**,
+the reuse-or-produce translation rule, and the explicit permission to return zero cards.
 
 **Contract**: A function taking the learned/known language pair (canonical values from
 `src/lib/languages.ts`, rendered to display names via `languageLabel`) and returning the system
-prompt string. It must state: `front` is in the learned language and `back` in the known one;
-**at most `MAX_CARDS` cards**; reuse a translation already visible in the screenshot rather than
-re-translating it, and set `sourceHadTranslation` accordingly; return an **empty `cards` array
-with a populated `emptyReason`** when the image contains no usable foreign-language material,
-rather than inventing cards; set `extractionConfidence` to `'low'` when the text was hard to
-read. Kept stable and free of per-request interpolation beyond the language pair, so it remains
-cacheable.
+prompt string. It must state, in this order of emphasis:
+
+- **How many cards.** One card is the normal answer: most screenshots capture a single phrase,
+  sentence, or exchange, and that is one flashcard. Produce more **only** when the source
+  contains genuinely distinct learnable items — separate lines of lyrics, separate exchanges in a
+  transcript, separate vocabulary entries on an exercise page — with one card per item. Never
+  split a single phrase into fragments, never restate the same phrase from a different angle, and
+  never add cards to fill space. If in doubt between one card and several, return one. The
+  15-card ceiling exists to bound runaway output and is **not** a target to approach.
+- `front` is in the learned language and `back` in the known one.
+- Reuse a translation already visible in the screenshot rather than re-translating it, and set
+  `sourceHadTranslation` accordingly.
+- Return an **empty `cards` array with a populated `emptyReason`** when the image contains no
+  usable foreign-language material, rather than inventing cards.
+- Set `extractionConfidence` to `'low'` when the text was hard to read.
+
+Kept stable and free of per-request interpolation beyond the language pair, so it remains
+cacheable. The one-card default is the single highest-leverage line in this prompt — the eval
+harness in Phase 3 measures whether it holds, and Phase 3's sweep should include a prompt
+variant without it as the comparison, so the instruction's value is demonstrated rather than
+assumed.
 
 #### 4. Generator
 
@@ -350,10 +384,16 @@ user-supplied material**.
 **Intent**: A small, honest sample of the material actually in use, with hand-written expected
 output, so quality becomes a number instead of an impression.
 
-**Contract**: ~10 real screenshots plus, per screenshot, a JSON file recording the language pair
-and the expected cards. The set **must** include: one source with a translation already visible
-in the image, one without, and one that should legitimately yield **zero** cards. Owner: the
-user — no agent can supply this.
+**Contract**: ~10 real screenshots plus, per screenshot, a JSON file recording the language pair,
+the expected cards, and the **expected card count**. The set **must** include: one source with a
+translation already visible in the image, one without, one that should legitimately yield **zero**
+cards, several ordinary single-phrase screenshots that should each yield **exactly one** card,
+and at least one genuinely text-heavy source (lyrics excerpt or transcript) that should yield
+several. Owner: the user — no agent can supply this.
+
+The single-card majority is not padding in the fixture set: over-splitting is the failure mode
+this slice is most exposed to, and it cannot be detected by a harness whose every fixture expects
+many cards.
 
 #### 2. Eval script
 
@@ -364,11 +404,20 @@ and print the resulting keep-rate.
 
 **Contract**: A script reading `ANTHROPIC_API_KEY` from `process.env`, iterating the fixtures,
 calling `generateCards` directly (base64 from the local file), and comparing produced cards to
-expected ones. Reports per configuration: cards generated, cards matching expectation,
-**keep-rate**, `sourceHadTranslation` correctness, and whether the zero-card fixture correctly
-returned an empty set with a reason. Sweeps at minimum `claude-sonnet-5` at effort `low` /
-`medium` / `high`, plus one `claude-opus-5` run as the accuracy ceiling. Add a `devDependency`
-capable of running a TypeScript file directly and an `npm run eval` script.
+expected ones. Reports per configuration:
+
+- **Keep-rate** — cards matching expectation over cards generated. The ≥ 75% bar.
+- **Count accuracy** — produced count vs expected count per fixture, summarised as an
+  over-generation rate (fixtures where the model returned more cards than warranted) and an
+  under-generation rate. A configuration that scores well on keep-rate while over-generating is
+  **not** passing; report the two side by side so the trade cannot be hidden.
+- `sourceHadTranslation` correctness, and whether the zero-card fixture returned an empty set
+  with a usable reason.
+
+Sweeps at minimum `claude-sonnet-5` at effort `low` / `medium` / `high`, plus one `claude-opus-5`
+run as the accuracy ceiling, plus one run with the one-card-default line removed from the prompt
+to quantify what that instruction is worth. Add a `devDependency` capable of running a TypeScript
+file directly and an `npm run eval` script.
 
 > **Why the Opus 5 row matters.** The chosen production default is Sonnet 5, which is *not* the
 > accuracy ceiling. If the bar is missed on Sonnet 5, that alone does not tell you whether the
@@ -388,9 +437,12 @@ capable of running a TypeScript file directly and an `npm run eval` script.
 #### Manual Verification:
 
 - Keep-rate on `claude-sonnet-5` is recorded, and compared against the ≥ 75% bar
+- **Count accuracy is recorded alongside it** — single-phrase fixtures return exactly one card,
+  and the text-heavy fixture returns several
 - If Sonnet 5 misses the bar, the `claude-opus-5` row is recorded before drawing any conclusion
   about the product hypothesis
 - The zero-card fixture returns an empty set **with** a usable `emptyReason`, not invented cards
+- The no-one-card-default prompt variant is run, and the difference recorded
 - A chosen effort level is decided and written into the endpoint's configuration in Phase 4
 
 **Implementation Note**: This phase pauses for the user to supply and label the screenshots.
@@ -472,8 +524,9 @@ page links back to the dashboard with the pair intact.
 
 #### Manual Verification:
 
-- Generating on a real source inserts 1..15 `flashcards` rows with `front` in the learned
-  language and `back` in the known one, and stamps `last_generated_at`
+- Generating on an ordinary single-phrase screenshot inserts **one** `flashcards` row with
+  `front` in the learned language and `back` in the known one, and stamps `last_generated_at`
+- Generating on a text-heavy source inserts several rows, one per distinct item
 - Generating a second time without confirmation changes nothing and costs nothing
 - Generating with confirmation replaces the set — old rows gone, new rows present
 - A source belonging to another user cannot be generated (redirects as not-found)
@@ -596,8 +649,9 @@ the protection holds even if the client is bypassed.
 1. Apply the migration; confirm the new columns and the confidence check in Studio.
 2. Set `ANTHROPIC_API_KEY`; confirm the config banner disappears.
 3. Upload a screenshot; confirm you land on `/sources/{id}` rather than the dashboard.
-4. Generate; confirm 1..15 cards with the correct language orientation and a stamped
-   `last_generated_at`.
+4. Generate from an ordinary single-phrase screenshot; confirm **exactly one** card with the
+   correct language orientation and a stamped `last_generated_at`. Repeat on a text-heavy source;
+   confirm several cards, one per distinct item.
 5. Discard two cards, save, reload; confirm the decisions persisted. Un-discard one, save,
    reload; confirm it came back.
 6. Re-generate; confirm the confirmation step, then that the set was replaced.
@@ -605,12 +659,16 @@ the protection holds even if the client is bypassed.
    and survives a reload.
 8. Sign in as a second user; confirm `/sources/{id}` for the first user's source is unreachable.
 9. Unset `ANTHROPIC_API_KEY` and generate; confirm a clean failure that writes nothing.
-10. Run `npm run eval`; record keep-rate per configuration against the ≥ 75% bar.
+10. Run `npm run eval`; record keep-rate **and count accuracy** per configuration against the
+    ≥ 75% bar.
 
 ## Performance Considerations
 
-One image plus ~700 output tokens lands in single-digit seconds — far inside `maxDuration: 60`,
-so the latency budget is not tight. The real risk is the **Fluid Compute regression** from
+One image plus a typical one-card response — well under 100 output tokens — lands in single-digit
+seconds, far inside `maxDuration: 60`, so the latency budget is not tight. The research docs
+modelled ~700 output tokens on a 15-card assumption; with one card as the norm, output is a
+rounding error against the image and the per-generation cost sits at the bottom of the range
+those tables give. The real risk is the **Fluid Compute regression** from
 `infrastructure.md:77`: if it is disabled, Hobby silently reverts to a 10 s cap and this endpoint
 starts timing out **in production only**. Verify Fluid Compute is enabled on the project as part
 of Phase 4's manual gate.
@@ -684,18 +742,20 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [ ] 3.1 Fixtures present, including in-source-translation, no-translation, and zero-card cases
+- [ ] 3.1 Fixtures present: in-source-translation, no-translation, zero-card, several single-card, one text-heavy
 - [ ] 3.2 Script exists and `npm run eval` is wired
 - [ ] 3.3 Type checking passes (`astro sync && astro check`)
 - [ ] 3.4 Linting passes (`npm run lint`)
-- [ ] 3.5 Harness runs to completion and prints keep-rate per configuration (`npm run eval`)
+- [ ] 3.5 Harness runs to completion and prints keep-rate **and count accuracy** per configuration (`npm run eval`)
 
 #### Manual
 
 - [ ] 3.6 Keep-rate on `claude-sonnet-5` recorded and compared against the ≥ 75% bar
-- [ ] 3.7 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call
-- [ ] 3.8 Zero-card fixture returns an empty set with a usable `emptyReason`
-- [ ] 3.9 Effort level chosen and carried into Phase 4
+- [ ] 3.7 Count accuracy recorded: single-phrase fixtures return exactly one card, text-heavy returns several
+- [ ] 3.8 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call
+- [ ] 3.9 Zero-card fixture returns an empty set with a usable `emptyReason`
+- [ ] 3.10 No-one-card-default prompt variant run and the difference recorded
+- [ ] 3.11 Effort level chosen and carried into Phase 4
 
 ### Phase 4: Generation Endpoint
 
@@ -708,14 +768,15 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Manual
 
-- [ ] 4.5 Generation inserts 1..15 correctly oriented cards and stamps `last_generated_at`
-- [ ] 4.6 Second generation without confirmation changes nothing and costs nothing
-- [ ] 4.7 Generation with confirmation replaces the set
-- [ ] 4.8 Another user's source cannot be generated
-- [ ] 4.9 Unauthenticated POST redirects to `/auth/signin`
-- [ ] 4.10 Missing `ANTHROPIC_API_KEY` fails cleanly and writes nothing
-- [ ] 4.11 Forced upstream failure leaves the previous card set intact
-- [ ] 4.12 Fluid Compute confirmed enabled on the Vercel project
+- [ ] 4.5 Single-phrase screenshot inserts exactly one correctly oriented card and stamps `last_generated_at`
+- [ ] 4.6 Text-heavy source inserts several cards, one per distinct item
+- [ ] 4.7 Second generation without confirmation changes nothing and costs nothing
+- [ ] 4.8 Generation with confirmation replaces the set
+- [ ] 4.9 Another user's source cannot be generated
+- [ ] 4.10 Unauthenticated POST redirects to `/auth/signin`
+- [ ] 4.11 Missing `ANTHROPIC_API_KEY` fails cleanly and writes nothing
+- [ ] 4.12 Forced upstream failure leaves the previous card set intact
+- [ ] 4.13 Fluid Compute confirmed enabled on the Vercel project
 
 ### Phase 5: Review Screen
 
