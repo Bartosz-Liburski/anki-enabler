@@ -709,34 +709,34 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [x] 1.1 Migration file exists
-- [x] 1.2 Migration applies cleanly (`supabase db push`)
-- [x] 1.3 Types reflect new columns (`grep discarded`)
-- [x] 1.4 Type checking passes (`astro sync && astro check`)
-- [x] 1.5 Linting passes (`npm run lint`)
+- [x] 1.1 Migration file exists — 6559bbd
+- [x] 1.2 Migration applies cleanly (`supabase db push`) — 6559bbd
+- [x] 1.3 Types reflect new columns (`grep discarded`) — 6559bbd
+- [x] 1.4 Type checking passes (`astro sync && astro check`) — 6559bbd
+- [x] 1.5 Linting passes (`npm run lint`) — 6559bbd
 
 #### Manual
 
-- [x] 1.6 `flashcards` shows `front`, `back`, `discarded` with the false default in Studio
-- [x] 1.7 `sources` shows the three nullable generation-state columns with the confidence check
-- [x] 1.8 F-01's `flashcards_owner_all` policy and `source_id` cascade unchanged
+- [x] 1.6 `flashcards` shows `front`, `back`, `discarded` with the false default in Studio — 6559bbd
+- [x] 1.7 `sources` shows the three nullable generation-state columns with the confidence check — 6559bbd
+- [x] 1.8 F-01's `flashcards_owner_all` policy and `source_id` cascade unchanged — 6559bbd
 
 ### Phase 2: Generator Module
 
 #### Automated
 
-- [ ] 2.1 Dependencies installed (`@anthropic-ai/sdk`, `zod`)
-- [ ] 2.2 Module files exist (`card-schema`, `prompt`, `generate-cards`)
-- [ ] 2.3 Generator free of Astro/Supabase imports
-- [ ] 2.4 Type checking passes (`astro sync && astro check`)
-- [ ] 2.5 Linting passes (`npm run lint`)
-- [ ] 2.6 Production build passes (`npm run build`)
+- [x] 2.1 Dependencies installed (`@anthropic-ai/sdk`, `zod`)
+- [x] 2.2 Module files exist (`card-schema`, `prompt`, `generate-cards`)
+- [x] 2.3 Generator free of Astro/Supabase imports
+- [x] 2.4 Type checking passes (`astro sync && astro check`)
+- [x] 2.5 Linting passes (`npm run lint`)
+- [x] 2.6 Production build passes (`npm run build`)
 
 #### Manual
 
 - [ ] 2.7 `ANTHROPIC_API_KEY` set locally and in Vercel (Production + Preview)
-- [ ] 2.8 App builds without the key and the config banner names it
-- [ ] 2.9 A one-off call against a real screenshot returns schema-valid cards
+- [x] 2.8 App builds without the key and the config banner names it
+- [x] 2.9 A one-off call against a real screenshot returns schema-valid cards
 
 ### Phase 3: Eval Harness
 
