@@ -56,6 +56,17 @@ export function dashboardUrl(params: Record<string, string>): string {
 }
 
 /**
+ * Build a `/sources/{id}` URL — where S-02's generation and review outcomes land.
+ *
+ * Lives next to `dashboardUrl` for the same reason: one place spells the outcome param names, so
+ * an endpoint and the page that reads them cannot drift apart.
+ */
+export function sourceUrl(id: string, params: Record<string, string> = {}): string {
+  const query = new URLSearchParams(params).toString();
+  return query ? `/sources/${id}?${query}` : `/sources/${id}`;
+}
+
+/**
  * Canonical dashboard URL for a pair, preserving any outcome params from the URL being replaced.
  *
  * The endpoint's language-level failures redirect without a pair, so this recall redirect would

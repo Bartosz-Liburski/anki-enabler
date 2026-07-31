@@ -33,3 +33,16 @@ export function isAcceptedImageType(mimeType: string): mimeType is AcceptedImage
 export function extensionForImageType(mimeType: AcceptedImageType): string {
   return EXTENSION_BY_IMAGE_TYPE[mimeType];
 }
+
+/**
+ * The inverse: recover the mime type from a stored `image_path` extension (S-02).
+ *
+ * Trustworthy because `POST /api/sources` wrote that extension via `extensionForImageType`, from a
+ * mime type it had already validated. Derived here rather than re-sniffed so the two directions
+ * cannot drift; returns null for anything unrecognised instead of guessing.
+ */
+export function imageTypeForPath(imagePath: string): AcceptedImageType | null {
+  const extension = imagePath.split(".").pop()?.toLowerCase() ?? "";
+  const match = Object.entries(EXTENSION_BY_IMAGE_TYPE).find(([, ext]) => ext === extension);
+  return match ? (match[0] as AcceptedImageType) : null;
+}

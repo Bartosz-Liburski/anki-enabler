@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase";
 import { isSupportedLanguage } from "@/lib/languages";
 import { MAX_UPLOAD_BYTES, extensionForImageType, isAcceptedImageType } from "@/lib/upload-limits";
 import { SOURCE_SUCCESS_CODE, type SourceErrorCode } from "@/lib/source-errors";
-import { dashboardUrl } from "@/lib/source-pair";
+import { dashboardUrl, sourceUrl } from "@/lib/source-pair";
 
 const BUCKET = "screenshots";
 
@@ -83,5 +83,9 @@ export const POST: APIRoute = async (context) => {
     return fail("save-failed");
   }
 
-  return context.redirect(dashboardUrl({ ...pair, success: SOURCE_SUCCESS_CODE }));
+  // Land on the new source rather than the dashboard (S-02): browse is S-04's, so this redirect is
+  // the only path from the UI to a saved source, and without it generation would be unreachable.
+  // The language pair stays on the dashboard's own redirects — the review screen links back to the
+  // dashboard carrying it, so S-01's "add another screenshot to this pair" loop still holds.
+  return context.redirect(sourceUrl(id, { success: SOURCE_SUCCESS_CODE }));
 };

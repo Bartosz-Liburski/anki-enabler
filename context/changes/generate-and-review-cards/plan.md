@@ -742,29 +742,29 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [x] 3.1 Fixtures present: in-source-translation, no-translation, zero-card, several single-card, one text-heavy
-- [x] 3.2 Script exists and `npm run eval` is wired
-- [x] 3.3 Type checking passes (`astro sync && astro check`)
-- [x] 3.4 Linting passes (`npm run lint`)
-- [x] 3.5 Harness runs to completion and prints keep-rate **and count accuracy** per configuration (`npm run eval`)
+- [x] 3.1 Fixtures present: in-source-translation, no-translation, zero-card, several single-card, one text-heavy — 6da846c
+- [x] 3.2 Script exists and `npm run eval` is wired — 6da846c
+- [x] 3.3 Type checking passes (`astro sync && astro check`) — 6da846c
+- [x] 3.4 Linting passes (`npm run lint`) — 6da846c
+- [x] 3.5 Harness runs to completion and prints keep-rate **and count accuracy** per configuration (`npm run eval`) — 6da846c
 
 #### Manual
 
-- [x] 3.6 Keep-rate on `claude-sonnet-5` recorded and compared against the ≥ 75% bar
-- [x] 3.7 Count accuracy recorded: single-phrase fixtures return exactly one card, text-heavy returns several
-- [x] 3.8 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call
-- [x] 3.9 Zero-card fixture returns an empty set with a usable `emptyReason`
-- [x] 3.10 No-one-card-default prompt variant run and the difference recorded
-- [x] 3.11 Effort level chosen and carried into Phase 4
+- [x] 3.6 Keep-rate on `claude-sonnet-5` recorded and compared against the ≥ 75% bar — 6da846c
+- [x] 3.7 Count accuracy recorded: single-phrase fixtures return exactly one card, text-heavy returns several — 6da846c
+- [x] 3.8 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call — 6da846c
+- [x] 3.9 Zero-card fixture returns an empty set with a usable `emptyReason` — 6da846c
+- [x] 3.10 No-one-card-default prompt variant run and the difference recorded — 6da846c
+- [x] 3.11 Effort level chosen and carried into Phase 4 — 6da846c
 
 ### Phase 4: Generation Endpoint
 
 #### Automated
 
-- [ ] 4.1 Endpoint exists (`api/sources/[id]/generate.ts`)
-- [ ] 4.2 Type checking passes (`astro sync && astro check`)
-- [ ] 4.3 Linting passes (`npm run lint`)
-- [ ] 4.4 Production build passes (`npm run build`)
+- [x] 4.1 Endpoint exists (`api/sources/[id]/generate.ts`)
+- [x] 4.2 Type checking passes (`astro sync && astro check`)
+- [x] 4.3 Linting passes (`npm run lint`)
+- [x] 4.4 Production build passes (`npm run build`)
 
 #### Manual
 
