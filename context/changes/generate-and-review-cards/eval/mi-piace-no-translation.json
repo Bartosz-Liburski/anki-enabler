@@ -1,0 +1,15 @@
+{
+  "image": "mi-piace-no-translation.png",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "Mi piace scrivere un libro.",
+      "back": "I like writing a book.",
+      "backAlternatives": ["I like to write a book.", "I enjoy writing a book."]
+    }
+  ],
+  "sourceHadTranslation": false,
+  "note": "The no-translation-in-source case: a bare Italian sentence, nothing else on screen. The model must produce the English itself and report sourceHadTranslation false."
+}

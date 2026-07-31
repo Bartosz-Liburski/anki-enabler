@@ -68,6 +68,15 @@ const astroConfig = tseslint.config({
   },
 });
 
+// Developer CLI scripts (the eval harness): stdout IS the interface, so `no-console` — a warning
+// aimed at app code shipping stray debug output — does not apply here.
+const scriptsConfig = tseslint.config({
+  files: ["scripts/**/*.ts"],
+  rules: {
+    "no-console": "off",
+  },
+});
+
 export default tseslint.config(
   includeIgnoreFile(gitignorePath),
   // Supabase-generated schema types — do not lint/format generated output.
@@ -77,5 +86,6 @@ export default tseslint.config(
   eslintPluginAstro.configs["flat/recommended"],
   ...eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
+  scriptsConfig,
   eslintPluginPrettier,
 );

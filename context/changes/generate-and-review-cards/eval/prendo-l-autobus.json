@@ -1,0 +1,15 @@
+{
+  "image": "prendo-l-autobus.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "Prendo sempre l'autobus.",
+      "back": "I always take the bus.",
+      "backAlternatives": ["I always catch the bus."]
+    }
+  ],
+  "sourceHadTranslation": true,
+  "note": "A 'Translate this sentence' exercise: the Italian is in the speech bubble and the English answer is spelled out across the word-bank tiles ('I' 'always' 'take' 'the' 'bus'). The translation IS on screen, just as tiles rather than a prose line — so true. If the model reports false here, that is a judgement call rather than an obvious error; check the reported WRONG against this note before treating it as a defect."
+}

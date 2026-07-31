@@ -725,37 +725,37 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [x] 2.1 Dependencies installed (`@anthropic-ai/sdk`, `zod`)
-- [x] 2.2 Module files exist (`card-schema`, `prompt`, `generate-cards`)
-- [x] 2.3 Generator free of Astro/Supabase imports
-- [x] 2.4 Type checking passes (`astro sync && astro check`)
-- [x] 2.5 Linting passes (`npm run lint`)
-- [x] 2.6 Production build passes (`npm run build`)
+- [x] 2.1 Dependencies installed (`@anthropic-ai/sdk`, `zod`) — ac83135
+- [x] 2.2 Module files exist (`card-schema`, `prompt`, `generate-cards`) — ac83135
+- [x] 2.3 Generator free of Astro/Supabase imports — ac83135
+- [x] 2.4 Type checking passes (`astro sync && astro check`) — ac83135
+- [x] 2.5 Linting passes (`npm run lint`) — ac83135
+- [x] 2.6 Production build passes (`npm run build`) — ac83135
 
 #### Manual
 
 - [ ] 2.7 `ANTHROPIC_API_KEY` set locally and in Vercel (Production + Preview)
-- [x] 2.8 App builds without the key and the config banner names it
-- [x] 2.9 A one-off call against a real screenshot returns schema-valid cards
+- [x] 2.8 App builds without the key and the config banner names it — ac83135
+- [x] 2.9 A one-off call against a real screenshot returns schema-valid cards — ac83135
 
 ### Phase 3: Eval Harness
 
 #### Automated
 
-- [ ] 3.1 Fixtures present: in-source-translation, no-translation, zero-card, several single-card, one text-heavy
-- [ ] 3.2 Script exists and `npm run eval` is wired
-- [ ] 3.3 Type checking passes (`astro sync && astro check`)
-- [ ] 3.4 Linting passes (`npm run lint`)
-- [ ] 3.5 Harness runs to completion and prints keep-rate **and count accuracy** per configuration (`npm run eval`)
+- [x] 3.1 Fixtures present: in-source-translation, no-translation, zero-card, several single-card, one text-heavy
+- [x] 3.2 Script exists and `npm run eval` is wired
+- [x] 3.3 Type checking passes (`astro sync && astro check`)
+- [x] 3.4 Linting passes (`npm run lint`)
+- [x] 3.5 Harness runs to completion and prints keep-rate **and count accuracy** per configuration (`npm run eval`)
 
 #### Manual
 
-- [ ] 3.6 Keep-rate on `claude-sonnet-5` recorded and compared against the ≥ 75% bar
-- [ ] 3.7 Count accuracy recorded: single-phrase fixtures return exactly one card, text-heavy returns several
-- [ ] 3.8 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call
-- [ ] 3.9 Zero-card fixture returns an empty set with a usable `emptyReason`
-- [ ] 3.10 No-one-card-default prompt variant run and the difference recorded
-- [ ] 3.11 Effort level chosen and carried into Phase 4
+- [x] 3.6 Keep-rate on `claude-sonnet-5` recorded and compared against the ≥ 75% bar
+- [x] 3.7 Count accuracy recorded: single-phrase fixtures return exactly one card, text-heavy returns several
+- [x] 3.8 `claude-opus-5` row recorded if Sonnet 5 missed the bar, before any hypothesis call
+- [x] 3.9 Zero-card fixture returns an empty set with a usable `emptyReason`
+- [x] 3.10 No-one-card-default prompt variant run and the difference recorded
+- [x] 3.11 Effort level chosen and carried into Phase 4
 
 ### Phase 4: Generation Endpoint
 

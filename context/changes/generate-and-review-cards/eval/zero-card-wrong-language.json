@@ -1,0 +1,9 @@
+{
+  "image": "transcript-three-lines.jpeg",
+  "learnedLanguage": "de",
+  "knownLanguage": "en",
+  "expectedCardCount": 0,
+  "expectedCards": [],
+  "sourceHadTranslation": false,
+  "note": "THE zero-card fixture, and the reason it reuses an existing image: the source carries no material in the language being learned. A user set to German points at an Italian screenshot — a real mistake, and exactly the case FR-008's explanatory empty state exists for. A good generation returns an empty cards array with an emptyReason naming what it saw instead ('the text is Italian, not German'), rather than inventing German cards or silently translating the Italian. Worth adding a second, non-derived zero-card fixture later: a screenshot with no foreign-language text at all (an English-only app screen, or a photo without text)."
+}

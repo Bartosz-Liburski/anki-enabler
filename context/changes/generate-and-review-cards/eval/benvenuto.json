@@ -1,0 +1,9 @@
+{
+  "image": "benvenuto.png",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [{ "front": "Benvenuto qui", "back": "Welcome here" }],
+  "sourceHadTranslation": true,
+  "note": "Google Translate screenshot, English -> Italian. The known-language side is already on screen, so a good generation reuses it verbatim instead of re-translating. Single phrase, so exactly one card."
+}

@@ -1,0 +1,28 @@
+{
+  "image": "transcript-three-lines.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 3,
+  "expectedCards": [
+    {
+      "front": "Eddy, devi andare a casa e dormire.",
+      "back": "Eddy, you have to go home and sleep.",
+      "backAlternatives": [
+        "Eddy, you must go home and sleep.",
+        "Eddy, you need to go home and sleep."
+      ]
+    },
+    {
+      "front": "O vuoi andare dal dottore?",
+      "back": "Or do you want to go to the doctor?",
+      "backAlternatives": ["Or do you want to see the doctor?"]
+    },
+    {
+      "front": "Non ti preoccupare.",
+      "back": "Don't worry.",
+      "backAlternatives": ["Do not worry."]
+    }
+  ],
+  "sourceHadTranslation": false,
+  "note": "THE text-heavy fixture. Duolingo story transcript: three separate Italian utterances, each a distinct learnable item, so three cards is correct and one is under-generation. No English anywhere on screen, so the model must translate. Grades legitimate multi-card output — the counterweight to the single-phrase majority."
+}
