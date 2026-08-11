@@ -95,10 +95,17 @@ export function buildAnkiCsv(cards: readonly ExportCard[]): string {
  *
  * The filename is interpolated unquoted-escaped on purpose: `exportFilename` composes it from
  * curated language codes and an ISO date, so it cannot contain a `"` to break out of the header.
+ *
+ * `no-store` + `Vary: Cookie` because this is an authenticated GET carrying one user's cards. An
+ * uncontrolled 200 GET is fair game for the browser's disk cache, back-forward navigation, and any
+ * intermediary that caches heuristically — all of which would outlive the session that authorized
+ * it. There is nothing worth caching here anyway: the file is rebuilt from a single indexed read.
  */
 export function csvDownloadHeaders(filename: string): Record<string, string> {
   return {
     "Content-Type": CSV_CONTENT_TYPE,
     "Content-Disposition": `attachment; filename="${filename}"`,
+    "Cache-Control": "no-store",
+    Vary: "Cookie",
   };
 }

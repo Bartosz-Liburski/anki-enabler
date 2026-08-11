@@ -4,7 +4,12 @@ import AddSourceForm from "@/components/sources/AddSourceForm";
 import LanguagePairForm from "@/components/sources/LanguagePairForm";
 import { createClient } from "@/lib/supabase";
 import { languageLabel } from "@/lib/languages";
-import { SOURCE_SUCCESS_CODE, SOURCE_SUCCESS_MESSAGE, sourceErrorMessage } from "@/lib/source-errors";
+import {
+  isExportErrorCode,
+  SOURCE_SUCCESS_CODE,
+  SOURCE_SUCCESS_MESSAGE,
+  sourceErrorMessage,
+} from "@/lib/source-errors";
 import { isValidPair } from "@/lib/source-pair";
 
 const { user } = Astro.locals;
@@ -21,20 +26,30 @@ const pairReady = isValidPair(learnedLanguage, knownLanguage);
 
 // Export failures get their own banner rather than riding the shared `error` into AddSourceForm's
 // serverError prop below — an export problem rendered against the upload form reads as if the
-// upload had failed. Every other code keeps flowing exactly as it did before.
+// upload had failed. Every other code keeps flowing exactly as it did before. The codes come from
+// source-errors.ts rather than being re-spelled here, so renaming one cannot silently switch the
+// split off while still type-checking.
 const errorCode = Astro.url.searchParams.get("error");
-const isExportError = errorCode === "export-empty" || errorCode === "export-failed";
-const exportError = isExportError ? sourceErrorMessage(errorCode) : null;
-const error = isExportError ? null : sourceErrorMessage(errorCode);
+const errorMessage = sourceErrorMessage(errorCode);
+const isExportError = isExportErrorCode(errorCode);
+const exportError = isExportError ? errorMessage : null;
+const error = isExportError ? null : errorMessage;
 const success = Astro.url.searchParams.get("success") === SOURCE_SUCCESS_CODE ? SOURCE_SUCCESS_MESSAGE : null;
 
 // Gates the account-wide export link (S-03). A head-only count, scoped to the user by RLS — the
 // dashboard needs the number, not the rows.
+//
+// A failed count must NOT hide the feature. Treating the error as zero would make the whole export
+// section vanish for a user with hundreds of kept cards, with nothing on the page to explain it.
+// The link is offered anyway and the count omitted from the copy; the route carries its own
+// `export-empty` guard, so an optimistic link costs at worst one redirect with a banner.
 const supabase = createClient(Astro.request.headers, Astro.cookies);
-const { count } = supabase
+const { count, error: countError } = supabase
   ? await supabase.from("flashcards").select("id", { count: "exact", head: true }).eq("discarded", false)
-  : { count: 0 };
+  : { count: 0, error: null };
+const countFailed = countError !== null;
 const keptCount = count ?? 0;
+const canExport = countFailed || keptCount > 0;
 ---
 
 <Layout title="Dashboard">
@@ -116,7 +131,7 @@ const keptCount = count ?? 0;
       </div>
 
       {
-        (keptCount > 0 || exportError) && (
+        (canExport || exportError) && (
           <div class="mt-6 border-t border-white/10 pt-6 text-left">
             <h2 class="text-lg font-semibold">Export to Anki</h2>
 
@@ -126,11 +141,12 @@ const keptCount = count ?? 0;
               </p>
             )}
 
-            {keptCount > 0 && (
+            {canExport && (
               <>
                 <p class="mt-1 text-sm text-blue-100/60">
-                  Downloads {keptCount === 1 ? "the 1 card" : `all ${keptCount} cards`} you've kept across every source
-                  as one CSV. Each row is tagged with its own learning direction, so you can split them by tag in Anki.
+                  Downloads {countFailed ? "the cards" : keptCount === 1 ? "the 1 card" : `all ${keptCount} cards`}{" "}
+                  you've kept across every source as one CSV. Each row is tagged with its own learning direction, so you
+                  can split them by tag in Anki.
                 </p>
                 <a
                   href="/api/export.csv"

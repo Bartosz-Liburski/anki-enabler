@@ -1,1 +1,6 @@
 npx lint-staged
+
+# The CSV escaping rules have no test framework behind them and no visible failure mode: a broken
+# quote does not throw, it shifts a column, and the file still looks like plausible text. Sub-second,
+# no env, no network — cheap enough to run on every commit rather than hope someone remembers.
+npm run csv:smoke

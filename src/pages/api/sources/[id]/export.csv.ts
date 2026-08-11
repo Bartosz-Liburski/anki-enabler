@@ -40,22 +40,36 @@ export const GET: APIRoute = async (context) => {
   // client-supplied direction would let a forged URL mislabel someone's deck. RLS scopes the
   // lookup to the owner, so "not yours" and "not there" are one outcome — deliberately, per
   // source-errors.ts:42-44.
-  const { data: source } = await supabase
+  const { data: source, error: sourceError } = await supabase
     .from("sources")
     .select("learned_language, known_language")
     .eq("id", id)
     .maybeSingle();
 
+  // A query failure and a missing row are different things: without this branch a transient
+  // database error tells the user their own source does not exist. Only a clean read that found
+  // nothing is "not found".
+  if (sourceError) {
+    return fail("export-failed");
+  }
+
   if (!source) {
     return context.redirect(dashboardUrl({ error: "source-not-found" }));
   }
 
+  // `id` breaks ties on `created_at`: a generation inserts all of a source's cards in ONE statement
+  // (generate.ts:123), so they share a timestamp and their relative order is otherwise up to
+  // Postgres — two downloads of unchanged data could differ in row order.
+  //
+  // No paging here, unlike the account-wide route: S-02 caps a source at MAX_CARDS (15), three
+  // orders of magnitude below PostgREST's 1000-row truncation point.
   const { data: cards, error: readError } = await supabase
     .from("flashcards")
     .select("front, back")
     .eq("source_id", id)
     .eq("discarded", false)
-    .order("created_at", { ascending: true });
+    .order("created_at", { ascending: true })
+    .order("id", { ascending: true });
 
   if (readError) {
     return fail("export-failed");

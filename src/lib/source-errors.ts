@@ -64,6 +64,19 @@ export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   "export-failed": "Building the CSV export failed. Nothing was downloaded — try again.",
 };
 
+/**
+ * The export codes, as a value the dashboard can test against.
+ *
+ * The dashboard routes these two to their own banner instead of the upload form's error slot, and
+ * spelling them as bare string literals there would make a rename type-check clean while silently
+ * turning the split off. `satisfies` keeps this list honest against the union above.
+ */
+export const EXPORT_ERROR_CODES = ["export-empty", "export-failed"] as const satisfies readonly SourceErrorCode[];
+
+export function isExportErrorCode(code: string | null): boolean {
+  return code !== null && (EXPORT_ERROR_CODES as readonly string[]).includes(code);
+}
+
 export const SOURCE_SUCCESS_CODE = "source-added";
 
 export const SOURCE_SUCCESS_MESSAGE = "Screenshot added. It's ready to turn into flashcards.";
