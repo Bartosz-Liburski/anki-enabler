@@ -761,40 +761,40 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Automated
 
-- [x] 4.1 Endpoint exists (`api/sources/[id]/generate.ts`)
-- [x] 4.2 Type checking passes (`astro sync && astro check`)
-- [x] 4.3 Linting passes (`npm run lint`)
-- [x] 4.4 Production build passes (`npm run build`)
+- [x] 4.1 Endpoint exists (`api/sources/[id]/generate.ts`) — 6803791
+- [x] 4.2 Type checking passes (`astro sync && astro check`) — 6803791
+- [x] 4.3 Linting passes (`npm run lint`) — 6803791
+- [x] 4.4 Production build passes (`npm run build`) — 6803791
 
 #### Manual
 
-- [ ] 4.5 Single-phrase screenshot inserts exactly one correctly oriented card and stamps `last_generated_at`
-- [ ] 4.6 Text-heavy source inserts several cards, one per distinct item
-- [ ] 4.7 Second generation without confirmation changes nothing and costs nothing
-- [ ] 4.8 Generation with confirmation replaces the set
-- [ ] 4.9 Another user's source cannot be generated
-- [ ] 4.10 Unauthenticated POST redirects to `/auth/signin`
-- [ ] 4.11 Missing `ANTHROPIC_API_KEY` fails cleanly and writes nothing
-- [ ] 4.12 Forced upstream failure leaves the previous card set intact
+- [x] 4.5 Single-phrase screenshot inserts exactly one correctly oriented card and stamps `last_generated_at`
+- [x] 4.6 Text-heavy source inserts several cards, one per distinct item
+- [x] 4.7 Second generation without confirmation changes nothing and costs nothing
+- [x] 4.8 Generation with confirmation replaces the set
+- [x] 4.9 Another user's source cannot be generated
+- [x] 4.10 Unauthenticated POST redirects to `/auth/signin`
+- [x] 4.11 Missing `ANTHROPIC_API_KEY` fails cleanly and writes nothing
+- [x] 4.12 Forced upstream failure leaves the previous card set intact
 - [ ] 4.13 Fluid Compute confirmed enabled on the Vercel project
 
 ### Phase 5: Review Screen
 
 #### Automated
 
-- [ ] 5.1 Page and components exist (`sources/[id].astro`, `ReviewCardList`, `RegenerateForm`)
-- [ ] 5.2 Review endpoint exists (`api/sources/[id]/review.ts`)
-- [ ] 5.3 Type checking passes (`astro sync && astro check`)
-- [ ] 5.4 Linting passes (`npm run lint`)
-- [ ] 5.5 Production build passes (`npm run build`)
+- [x] 5.1 Page and components exist (`sources/[id].astro`, `ReviewCardList`, `RegenerateForm`)
+- [x] 5.2 Review endpoint exists (`api/sources/[id]/review.ts`)
+- [x] 5.3 Type checking passes (`astro sync && astro check`)
+- [x] 5.4 Linting passes (`npm run lint`)
+- [x] 5.5 Production build passes (`npm run build`)
 
 #### Manual
 
-- [ ] 5.6 Whole set renders on one screen with a discard toggle per card
-- [ ] 5.7 Discard decisions persist across a reload
-- [ ] 5.8 Un-discarding a card and saving restores it to kept
-- [ ] 5.9 Zero-card source shows its explanation, and still shows it after a reload
-- [ ] 5.10 Low-confidence generation shows the warning alongside its cards
-- [ ] 5.11 Re-generate asks for confirmation, then replaces the set
-- [ ] 5.12 Another user's `/sources/{id}` is unreachable
-- [ ] 5.13 No regression: S-01 upload flow and the dashboard pair loop still work
+- [x] 5.6 Whole set renders on one screen with a discard toggle per card
+- [x] 5.7 Discard decisions persist across a reload
+- [x] 5.8 Un-discarding a card and saving restores it to kept
+- [x] 5.9 Zero-card source shows its explanation, and still shows it after a reload
+- [x] 5.10 Low-confidence generation shows the warning alongside its cards
+- [x] 5.11 Re-generate asks for confirmation, then replaces the set
+- [x] 5.12 Another user's `/sources/{id}` is unreachable
+- [x] 5.13 No regression: S-01 upload flow and the dashboard pair loop still work

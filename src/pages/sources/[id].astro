@@ -1,0 +1,162 @@
+---
+import Layout from "@/layouts/Layout.astro";
+import ReviewCardList from "@/components/cards/ReviewCardList";
+import RegenerateForm from "@/components/cards/RegenerateForm";
+import { createClient } from "@/lib/supabase";
+import { languageLabel } from "@/lib/languages";
+import { sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
+import { dashboardUrl } from "@/lib/source-pair";
+
+// No auth guard here: `/sources` is in the middleware's PROTECTED_ROUTES, so an unauthenticated
+// visit never reaches this frontmatter — same arrangement as dashboard.astro. A null client (no
+// Supabase configured) also implies a null user, so the middleware has already redirected; the
+// null-coalescing below is belt-and-braces rather than a second guard.
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const id = Astro.params.id ?? "";
+
+// RLS scopes this to the owner, so another user's source is indistinguishable from one that does
+// not exist — which is the point. A missing row renders a not-found panel rather than throwing.
+const { data: source } = supabase
+  ? await supabase
+      .from("sources")
+      .select("id, learned_language, known_language, last_generated_at, generation_note, extraction_confidence")
+      .eq("id", id)
+      .maybeSingle()
+  : { data: null };
+
+const { data: cardRows } =
+  supabase && source
+    ? await supabase
+        .from("flashcards")
+        .select("id, front, back, discarded")
+        .eq("source_id", id)
+        .order("created_at", { ascending: true })
+    : { data: null };
+
+const cards = cardRows ?? [];
+
+const params = Astro.url.searchParams;
+const error = sourceErrorMessage(params.get("error"));
+const rawCount = Number(params.get("count"));
+const success = sourceSuccessMessage(params.get("success"), Number.isFinite(rawCount) ? rawCount : undefined);
+
+// `last_generated_at` is null only for a source that has NEVER been generated. That is what
+// separates a fresh source from one that ran and legitimately produced nothing — and the
+// difference decides whether this page shows a call to action or an explanation.
+const neverGenerated = source !== null && source.last_generated_at === null;
+const generatedNothing = source !== null && !neverGenerated && cards.length === 0;
+const lowConfidence = source?.extraction_confidence === "low";
+
+const backToDashboard = source
+  ? dashboardUrl({ learned_language: source.learned_language, known_language: source.known_language })
+  : "/dashboard";
+---
+
+<Layout title="Source">
+  <div class="bg-cosmic flex min-h-screen items-start justify-center p-4">
+    <div class="my-8 w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
+      {
+        source === null ? (
+          <>
+            <h1 class="mb-2 text-2xl font-bold">Source not found</h1>
+            <p class="text-sm text-blue-100/70">
+              This source doesn't exist, or it isn't yours. Nothing else is revealed either way.
+            </p>
+            <a
+              href="/dashboard"
+              class="mt-6 inline-block rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
+            >
+              Back to dashboard
+            </a>
+          </>
+        ) : (
+          <>
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+                  Screenshot source
+                </h1>
+                <p class="mt-1 text-xs tracking-wide text-blue-100/50 uppercase">Learning direction</p>
+                <p class="font-semibold">
+                  {languageLabel(source.learned_language)} → {languageLabel(source.known_language)}
+                </p>
+              </div>
+              <a
+                href={backToDashboard}
+                class="shrink-0 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs transition-colors hover:bg-white/20"
+              >
+                Add another
+              </a>
+            </div>
+
+            {success && (
+              <p class="mt-6 rounded-lg border border-emerald-500/30 bg-emerald-900/30 px-3 py-2 text-sm text-emerald-200">
+                {success}
+              </p>
+            )}
+
+            {error && (
+              <p class="mt-6 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                {error}
+              </p>
+            )}
+
+            {lowConfidence && cards.length > 0 && (
+              <p class="mt-6 rounded-lg border border-amber-500/30 bg-amber-900/30 px-3 py-2 text-sm text-amber-200">
+                The text in this screenshot was hard to read, so double-check these cards before keeping them.
+              </p>
+            )}
+
+            <div class="mt-6 border-t border-white/10 pt-6">
+              {neverGenerated && (
+                <div class="space-y-4">
+                  <div>
+                    <h2 class="text-lg font-semibold">No flashcards yet</h2>
+                    <p class="mt-1 text-sm text-blue-100/70">
+                      Turn this screenshot into flashcards. Most screenshots yield a single card — several only when the
+                      source really carries several distinct things to learn.
+                    </p>
+                  </div>
+                  <RegenerateForm sourceId={source.id} cardCount={0} client:load />
+                </div>
+              )}
+
+              {generatedNothing && (
+                <div class="space-y-4">
+                  <div>
+                    <h2 class="text-lg font-semibold">Nothing to learn here</h2>
+                    {/* The model's own explanation, persisted on the source — which is what makes it
+                        survive a page reload instead of vanishing with the redirect. */}
+                    <p class="mt-1 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-blue-100/80">
+                      {source.generation_note ??
+                        "The screenshot had no usable material in the language you're learning."}
+                    </p>
+                    <p class="mt-2 text-sm text-blue-100/60">
+                      Try a screenshot that shows text in {languageLabel(source.learned_language)}.
+                    </p>
+                  </div>
+                  <RegenerateForm sourceId={source.id} cardCount={0} client:load />
+                </div>
+              )}
+
+              {cards.length > 0 && (
+                <div class="space-y-6">
+                  <ReviewCardList
+                    sourceId={source.id}
+                    cards={cards}
+                    learnedLanguageLabel={languageLabel(source.learned_language)}
+                    knownLanguageLabel={languageLabel(source.known_language)}
+                    client:load
+                  />
+                  <div class="border-t border-white/10 pt-6">
+                    <RegenerateForm sourceId={source.id} cardCount={cards.length} client:load />
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
+        )
+      }
+    </div>
+  </div>
+</Layout>

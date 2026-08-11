@@ -2,7 +2,9 @@ import { defineMiddleware } from "astro:middleware";
 import { createClient } from "@/lib/supabase";
 import { clearPairCookie, dashboardPairUrl, isValidPair, readPairCookie, writePairCookie } from "@/lib/source-pair";
 
-const PROTECTED_ROUTES = ["/dashboard"];
+// `/sources` joins the guard for S-02's review screen. The pair-recall block below stays scoped to
+// `/dashboard` on purpose: the review screen reads its pair from the source row, not the URL.
+const PROTECTED_ROUTES = ["/dashboard", "/sources"];
 
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);

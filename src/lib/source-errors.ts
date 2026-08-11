@@ -28,7 +28,8 @@ export type SourceErrorCode =
   | "generation-invalid"
   | "generation-implausible"
   | "generation-failed"
-  | "cards-save-failed";
+  | "cards-save-failed"
+  | "review-save-failed";
 
 export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   "file-missing": "Pick a screenshot to upload.",
@@ -52,6 +53,7 @@ export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
     "The generation service returned far more cards than this source warrants. Nothing was saved.",
   "generation-failed": "Generating flashcards failed. Your previous cards are untouched — try again.",
   "cards-save-failed": "The cards were generated but saving them failed. Try again.",
+  "review-save-failed": "Saving your keep/discard choices failed. Nothing changed — try again.",
 };
 
 export const SOURCE_SUCCESS_CODE = "source-added";
@@ -67,7 +69,14 @@ export const CARDS_GENERATED_CODE = "cards-generated";
  */
 export const CARDS_NONE_CODE = "cards-none";
 
-export type SourceSuccessCode = typeof SOURCE_SUCCESS_CODE | typeof CARDS_GENERATED_CODE | typeof CARDS_NONE_CODE;
+/** The review screen's keep/discard choices were persisted. */
+export const CARDS_SAVED_CODE = "cards-saved";
+
+export type SourceSuccessCode =
+  | typeof SOURCE_SUCCESS_CODE
+  | typeof CARDS_GENERATED_CODE
+  | typeof CARDS_NONE_CODE
+  | typeof CARDS_SAVED_CODE;
 
 export function sourceErrorMessage(code: string | null): string | null {
   if (!code) return null;
@@ -92,6 +101,8 @@ export function sourceSuccessMessage(code: string | null, count?: number): strin
         : `Generated ${count ?? 0} flashcards. Discard the weak ones, then save.`;
     case CARDS_NONE_CODE:
       return "No flashcards could be made from this screenshot. The reason is below.";
+    case CARDS_SAVED_CODE:
+      return "Saved. The cards you kept are the ones you'll export.";
     default:
       return null;
   }
