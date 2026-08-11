@@ -29,7 +29,10 @@ export type SourceErrorCode =
   | "generation-implausible"
   | "generation-failed"
   | "cards-save-failed"
-  | "review-save-failed";
+  | "review-save-failed"
+  // CSV export (S-03)
+  | "export-empty"
+  | "export-failed";
 
 export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   "file-missing": "Pick a screenshot to upload.",
@@ -54,6 +57,11 @@ export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   "generation-failed": "Generating flashcards failed. Your previous cards are untouched — try again.",
   "cards-save-failed": "The cards were generated but saving them failed. Try again.",
   "review-save-failed": "Saving your keep/discard choices failed. Nothing changed — try again.",
+  // Reachable only by requesting an export URL directly — the UI hides the link when nothing is
+  // kept. Worth a real message anyway: a bookmarked export URL still works after every card on
+  // that source has been discarded.
+  "export-empty": "There are no kept flashcards to export. Keep at least one card first.",
+  "export-failed": "Building the CSV export failed. Nothing was downloaded — try again.",
 };
 
 export const SOURCE_SUCCESS_CODE = "source-added";

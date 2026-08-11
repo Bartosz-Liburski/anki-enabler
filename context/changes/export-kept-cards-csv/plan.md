@@ -422,29 +422,29 @@ rolled back freely; a rollback simply removes the download links.
 
 #### Automated
 
-- [x] 1.1 Escaping smoke script passes: `npm run csv:smoke`
-- [x] 1.2 Linting passes: `npm run lint`
-- [x] 1.3 Build succeeds: `npm run build`
+- [x] 1.1 Escaping smoke script passes: `npm run csv:smoke` — 8db6eed
+- [x] 1.2 Linting passes: `npm run lint` — 8db6eed
+- [x] 1.3 Build succeeds: `npm run build` — 8db6eed
 
 #### Manual
 
-- [x] 1.4 Sample document from the smoke script imports into Anki as Basic notes with the tag visible and no dialog choices
+- [x] 1.4 Sample document from the smoke script imports into Anki as Basic notes with the tag visible and no dialog choices — 8db6eed
 
 ### Phase 2: Per-Source Export
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Build succeeds: `npm run build`
-- [ ] 2.3 Escaping smoke script still passes: `npm run csv:smoke`
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Build succeeds: `npm run build`
+- [x] 2.3 Escaping smoke script still passes: `npm run csv:smoke`
 
 #### Manual
 
-- [ ] 2.4 Source with kept cards shows the link; download is named for the pair and today's date
-- [ ] 2.5 Discarding everything hides the link; the direct URL yields the "nothing kept" banner
-- [ ] 2.6 Discarded cards are absent; row count equals kept count
-- [ ] 2.7 File imports into Anki with no dialog choices; comma and angle-bracket cards survive intact
-- [ ] 2.8 Another user's source id yields the same outcome as a made-up one
+- [x] 2.4 Source with kept cards shows the link; download is named for the pair and today's date
+- [x] 2.5 Discarding everything hides the link; the direct URL yields the "nothing kept" banner
+- [x] 2.6 Discarded cards are absent; row count equals kept count
+- [x] 2.7 File imports into Anki with no dialog choices; comma and angle-bracket cards survive intact
+- [x] 2.8 Another user's source id yields the same outcome as a made-up one
 
 ### Phase 3: Account-Wide Export
 
