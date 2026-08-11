@@ -13,7 +13,8 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
-    "eval": "tsx --env-file-if-exists=.env scripts/eval-cards.ts"
+    "eval": "tsx --env-file-if-exists=.env scripts/eval-cards.ts",
+    "csv:smoke": "tsx scripts/csv-smoke.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.115.0",
