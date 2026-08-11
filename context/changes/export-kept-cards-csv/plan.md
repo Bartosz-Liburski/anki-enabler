@@ -434,29 +434,29 @@ rolled back freely; a rollback simply removes the download links.
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Build succeeds: `npm run build`
-- [x] 2.3 Escaping smoke script still passes: `npm run csv:smoke`
+- [x] 2.1 Linting passes: `npm run lint` — 0acc378
+- [x] 2.2 Build succeeds: `npm run build` — 0acc378
+- [x] 2.3 Escaping smoke script still passes: `npm run csv:smoke` — 0acc378
 
 #### Manual
 
-- [x] 2.4 Source with kept cards shows the link; download is named for the pair and today's date
-- [x] 2.5 Discarding everything hides the link; the direct URL yields the "nothing kept" banner
-- [x] 2.6 Discarded cards are absent; row count equals kept count
-- [x] 2.7 File imports into Anki with no dialog choices; comma and angle-bracket cards survive intact
-- [x] 2.8 Another user's source id yields the same outcome as a made-up one
+- [x] 2.4 Source with kept cards shows the link; download is named for the pair and today's date — 0acc378
+- [x] 2.5 Discarding everything hides the link; the direct URL yields the "nothing kept" banner — 0acc378
+- [x] 2.6 Discarded cards are absent; row count equals kept count — 0acc378
+- [x] 2.7 File imports into Anki with no dialog choices; comma and angle-bracket cards survive intact — 0acc378
+- [x] 2.8 Another user's source id yields the same outcome as a made-up one — 0acc378
 
 ### Phase 3: Account-Wide Export
 
 #### Automated
 
-- [ ] 3.1 Linting passes: `npm run lint`
-- [ ] 3.2 Build succeeds: `npm run build`
-- [ ] 3.3 Escaping smoke script still passes: `npm run csv:smoke`
+- [x] 3.1 Linting passes: `npm run lint`
+- [x] 3.2 Build succeeds: `npm run build`
+- [x] 3.3 Escaping smoke script still passes: `npm run csv:smoke`
 
 #### Manual
 
-- [ ] 3.4 Dashboard link shows the correct total; file carries every kept card with per-row pair tags, contiguous by source
-- [ ] 3.5 Import produces two tags under `anki-enabler`; filtering by one isolates that source's cards
-- [ ] 3.6 Empty account shows no link; direct URL yields the banner near the export link, not on the upload form
-- [ ] 3.7 A second account sees only its own cards
+- [x] 3.4 Dashboard link shows the correct total; file carries every kept card with per-row pair tags, contiguous by source
+- [x] 3.5 Import produces two tags under `anki-enabler`; filtering by one isolates that source's cards
+- [x] 3.6 Empty account shows no link; direct URL yields the banner near the export link, not on the upload form
+- [x] 3.7 A second account sees only its own cards

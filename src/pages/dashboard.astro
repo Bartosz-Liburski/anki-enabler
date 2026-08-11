@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import AddSourceForm from "@/components/sources/AddSourceForm";
 import LanguagePairForm from "@/components/sources/LanguagePairForm";
+import { createClient } from "@/lib/supabase";
 import { languageLabel } from "@/lib/languages";
 import { SOURCE_SUCCESS_CODE, SOURCE_SUCCESS_MESSAGE, sourceErrorMessage } from "@/lib/source-errors";
 import { isValidPair } from "@/lib/source-pair";
@@ -18,8 +19,22 @@ const learnedLanguage = Astro.url.searchParams.get("learned_language") ?? "";
 const knownLanguage = Astro.url.searchParams.get("known_language") ?? "";
 const pairReady = isValidPair(learnedLanguage, knownLanguage);
 
-const error = sourceErrorMessage(Astro.url.searchParams.get("error"));
+// Export failures get their own banner rather than riding the shared `error` into AddSourceForm's
+// serverError prop below — an export problem rendered against the upload form reads as if the
+// upload had failed. Every other code keeps flowing exactly as it did before.
+const errorCode = Astro.url.searchParams.get("error");
+const isExportError = errorCode === "export-empty" || errorCode === "export-failed";
+const exportError = isExportError ? sourceErrorMessage(errorCode) : null;
+const error = isExportError ? null : sourceErrorMessage(errorCode);
 const success = Astro.url.searchParams.get("success") === SOURCE_SUCCESS_CODE ? SOURCE_SUCCESS_MESSAGE : null;
+
+// Gates the account-wide export link (S-03). A head-only count, scoped to the user by RLS — the
+// dashboard needs the number, not the rows.
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+const { count } = supabase
+  ? await supabase.from("flashcards").select("id", { count: "exact", head: true }).eq("discarded", false)
+  : { count: 0 };
+const keptCount = count ?? 0;
 ---
 
 <Layout title="Dashboard">
@@ -99,6 +114,35 @@ const success = Astro.url.searchParams.get("success") === SOURCE_SUCCESS_CODE ? 
           )
         }
       </div>
+
+      {
+        (keptCount > 0 || exportError) && (
+          <div class="mt-6 border-t border-white/10 pt-6 text-left">
+            <h2 class="text-lg font-semibold">Export to Anki</h2>
+
+            {exportError && (
+              <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                {exportError}
+              </p>
+            )}
+
+            {keptCount > 0 && (
+              <>
+                <p class="mt-1 text-sm text-blue-100/60">
+                  Downloads {keptCount === 1 ? "the 1 card" : `all ${keptCount} cards`} you've kept across every source
+                  as one CSV. Each row is tagged with its own learning direction, so you can split them by tag in Anki.
+                </p>
+                <a
+                  href="/api/export.csv"
+                  class="mt-3 inline-block rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
+                >
+                  Download CSV
+                </a>
+              </>
+            )}
+          </div>
+        )
+      }
 
       <div class="mt-6 flex items-center justify-center gap-3">
         <a
