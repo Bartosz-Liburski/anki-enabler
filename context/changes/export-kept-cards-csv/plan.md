@@ -450,13 +450,13 @@ rolled back freely; a rollback simply removes the download links.
 
 #### Automated
 
-- [x] 3.1 Linting passes: `npm run lint`
-- [x] 3.2 Build succeeds: `npm run build`
-- [x] 3.3 Escaping smoke script still passes: `npm run csv:smoke`
+- [x] 3.1 Linting passes: `npm run lint` — b05ee25
+- [x] 3.2 Build succeeds: `npm run build` — b05ee25
+- [x] 3.3 Escaping smoke script still passes: `npm run csv:smoke` — b05ee25
 
 #### Manual
 
-- [x] 3.4 Dashboard link shows the correct total; file carries every kept card with per-row pair tags, contiguous by source
-- [x] 3.5 Import produces two tags under `anki-enabler`; filtering by one isolates that source's cards
-- [x] 3.6 Empty account shows no link; direct URL yields the banner near the export link, not on the upload form
-- [x] 3.7 A second account sees only its own cards
+- [x] 3.4 Dashboard link shows the correct total; file carries every kept card with per-row pair tags, contiguous by source — b05ee25
+- [x] 3.5 Import produces two tags under `anki-enabler`; filtering by one isolates that source's cards — b05ee25
+- [x] 3.6 Empty account shows no link; direct URL yields the banner near the export link, not on the upload form — b05ee25
+- [x] 3.7 A second account sees only its own cards — b05ee25

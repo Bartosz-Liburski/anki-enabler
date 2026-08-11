@@ -2,7 +2,7 @@
 change_id: export-kept-cards-csv
 roadmap_id: S-03
 title: Export kept flashcards to CSV
-status: implementing
+status: implemented
 created: 2026-08-11
 updated: 2026-08-11
 prd_refs:
