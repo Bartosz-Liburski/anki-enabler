@@ -32,7 +32,7 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 | ID   | Change ID                   | Outcome (user can …)                                                        | Prerequisites | PRD refs                        | Status   |
 | ---- | --------------------------- | --------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
 | F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | done     |
-| S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | proposed |
+| S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | done     |
 | S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | proposed |
 | S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | blocked  |
 | S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | proposed |
@@ -89,7 +89,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Where do uploaded images live and how is the size cap enforced at upload time? — Owner: TBD (resolve in `/10x-plan`). Block: no.
 - **Risk:** Sequenced before generation because a stored, context-tagged source is the input generation consumes. Kept simple per the low-complexity goal — upload + persist + a small learning-context form, no image processing beyond storage (per `infrastructure.md`, images go straight to Supabase Storage; the function stays orchestration-only).
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Generate flashcards from a source and review them (keep/discard)
 
@@ -175,3 +175,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate.)
 
 - **F-01: (foundation) the `sources` and `flashcards` persistence exists with row-level per-user isolation enforced, so a signed-in user's data is readable/writable only by them.** — Archived 2026-08-20 → `context/archive/2026-07-23-per-user-data-isolation/`. Lesson: —.
+
+- **S-01: user can upload a screenshot as a source and set that source's learning context (foreign language being learned + language(s) already known), which fixes the translation direction for later generation.** — Archived 2026-08-20 → `context/archive/2026-07-25-add-screenshot-source/`. Lesson: —.
