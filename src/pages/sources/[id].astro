@@ -1,10 +1,12 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import PairNav from "@/components/PairNav.astro";
 import ReviewCardList from "@/components/cards/ReviewCardList";
 import RegenerateForm from "@/components/cards/RegenerateForm";
 import DeleteSourceForm from "@/components/sources/DeleteSourceForm";
 import { createClient } from "@/lib/supabase";
 import { languageLabel } from "@/lib/languages";
+import { toPairSummaries } from "@/lib/pairs";
 import { sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
 import { dashboardUrl } from "@/lib/source-pair";
 
@@ -24,6 +26,13 @@ const { data: source } = supabase
       .eq("id", id)
       .maybeSingle()
   : { data: null };
+
+// Same lightweight, unfiltered query as dashboard.astro's nav — ranks the user's pairs by
+// recency so this page can offer the same pair-switching nav (S-05).
+const { data: pairRows } = supabase
+  ? await supabase.from("sources").select("learned_language, known_language, created_at")
+  : { data: null };
+const pairs = toPairSummaries(pairRows ?? []);
 
 const { data: cardRows } =
   supabase && source
@@ -103,6 +112,12 @@ const backToDashboard = source
                 </a>
               </div>
             </div>
+
+            <PairNav
+              pairs={pairs}
+              activeLearnedLanguage={source.learned_language}
+              activeKnownLanguage={source.known_language}
+            />
 
             {success && (
               <p class="mt-6 rounded-lg border border-emerald-500/30 bg-emerald-900/30 px-3 py-2 text-sm text-emerald-200">

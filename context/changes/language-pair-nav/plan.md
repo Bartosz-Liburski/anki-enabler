@@ -212,24 +212,24 @@ Add the same nav to `/sources/[id]` so a user can jump straight to a different p
 
 #### Automated
 
-- [x] 2.1 Lint passes: `npm run lint`
-- [x] 2.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint` — 7112254
+- [x] 2.2 Build (includes Astro type checking) passes: `npm run build` — 7112254
 
 #### Manual
 
-- [x] 2.3 `/dashboard` "Your decks" shows only the active pair's decks
-- [x] 2.4 Nav lists all pairs newest-first; clicking one switches decks/count/CSV link to it
-- [x] 2.5 "Download CSV" downloads only the active pair's kept cards, count matches
-- [x] 2.6 "Add a language pair" reaches the blank picker; old "Change" link is gone
+- [x] 2.3 `/dashboard` "Your decks" shows only the active pair's decks — 7112254
+- [x] 2.4 Nav lists all pairs newest-first; clicking one switches decks/count/CSV link to it — 7112254
+- [x] 2.5 "Download CSV" downloads only the active pair's kept cards, count matches — 7112254
+- [x] 2.6 "Add a language pair" reaches the blank picker; old "Change" link is gone — 7112254
 
 ### Phase 3: PairNav on the source detail page
 
 #### Automated
 
-- [ ] 3.1 Lint passes: `npm run lint`
-- [ ] 3.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 3.1 Lint passes: `npm run lint`
+- [x] 3.2 Build (includes Astro type checking) passes: `npm run build`
 
 #### Manual
 
-- [ ] 3.3 Source detail page shows the nav with the current pair highlighted
-- [ ] 3.4 Clicking a different pair from the nav lands on that pair's dashboard, correctly scoped
+- [x] 3.3 Source detail page shows the nav with the current pair highlighted
+- [x] 3.4 Clicking a different pair from the nav lands on that pair's dashboard, correctly scoped
