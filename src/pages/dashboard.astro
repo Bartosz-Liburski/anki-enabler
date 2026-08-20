@@ -3,6 +3,7 @@ import Layout from "@/layouts/Layout.astro";
 import AddSourceForm from "@/components/sources/AddSourceForm";
 import LanguagePairForm from "@/components/sources/LanguagePairForm";
 import { createClient } from "@/lib/supabase";
+import { toDeckGroups } from "@/lib/decks";
 import { languageLabel } from "@/lib/languages";
 import {
   isExportErrorCode,
@@ -10,7 +11,7 @@ import {
   SOURCE_SUCCESS_MESSAGE,
   sourceErrorMessage,
 } from "@/lib/source-errors";
-import { isValidPair } from "@/lib/source-pair";
+import { isValidPair, sourceUrl } from "@/lib/source-pair";
 
 const { user } = Astro.locals;
 
@@ -50,12 +51,38 @@ const { count, error: countError } = supabase
 const countFailed = countError !== null;
 const keptCount = count ?? 0;
 const canExport = countFailed || keptCount > 0;
+
+// The deck list (S-04). One embedded select rides the flashcards -> sources foreign key, so a
+// deck's label, its kept count, and its total all come from a single round trip. RLS scopes both
+// sides; ordering here matches what `toDeckGroups` does anyway, which costs nothing and keeps the
+// query and the module from disagreeing.
+//
+// Deliberately not paged, unlike S-03's export routes: PostgREST truncates at 1000 rows, but a
+// short LIST is visible to the user and destroys nothing, where a short export file silently loses
+// cards they believe they exported. See the plan's Performance Considerations.
+const { data: sourceRows, error: decksError } = supabase
+  ? await supabase
+      .from("sources")
+      .select("id, learned_language, known_language, created_at, flashcards(id, front, discarded, created_at)")
+      .order("learned_language", { ascending: true })
+      .order("known_language", { ascending: true })
+      .order("created_at", { ascending: false })
+      .order("created_at", { referencedTable: "flashcards", ascending: true })
+      .order("id", { referencedTable: "flashcards", ascending: true })
+  : { data: null, error: null };
+
+// A failed query must not render as "no decks" — that is the shape S-03's review caught on the
+// export count, where a silent failure was indistinguishable from an empty result.
+const decksFailed = decksError !== null;
+const deckGroups = toDeckGroups(sourceRows ?? []);
+
+const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
 ---
 
 <Layout title="Dashboard">
   <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
     <div
-      class="w-full max-w-md rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl"
+      class="w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 p-8 text-center text-white backdrop-blur-xl"
     >
       <h1 class="mb-4 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-3xl font-bold text-transparent">
         Dashboard
@@ -126,6 +153,53 @@ const canExport = countFailed || keptCount > 0;
                 </p>
               )}
             </>
+          )
+        }
+      </div>
+
+      <div class="mt-6 border-t border-white/10 pt-6 text-left">
+        <h2 class="text-lg font-semibold">Your decks</h2>
+
+        {
+          decksFailed ? (
+            <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+              Your decks couldn't be loaded. Reload the page to try again — nothing has been lost.
+            </p>
+          ) : deckGroups.length === 0 ? (
+            <p class="mt-3 rounded-lg border border-white/15 bg-white/5 px-3 py-3 text-sm text-blue-100/70">
+              Your decks will appear here. Every screenshot you add becomes a deck of flashcards you can review, and the
+              ones you keep are what you export.
+            </p>
+          ) : (
+            <div class="mt-4 space-y-5">
+              {deckGroups.map((group) => (
+                <div>
+                  <h3 class="text-xs tracking-wide text-blue-100/50 uppercase">
+                    {languageLabel(group.learnedLanguage)} → {languageLabel(group.knownLanguage)}
+                  </h3>
+                  <ul class="mt-2 space-y-2">
+                    {group.decks.map((deck) => (
+                      <li>
+                        <a
+                          href={sourceUrl(deck.id)}
+                          class="block rounded-lg border border-white/15 bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
+                        >
+                          <span class="line-clamp-2 block font-medium break-words">{deck.label}</span>
+                          <span class="mt-1 block text-xs text-blue-100/50">
+                            {deck.totalCount > 0 && (
+                              <>
+                                {deck.keptCount} of {deck.totalCount} kept ·{" "}
+                              </>
+                            )}
+                            {deckDate.format(new Date(deck.createdAt))}
+                          </span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           )
         }
       </div>
