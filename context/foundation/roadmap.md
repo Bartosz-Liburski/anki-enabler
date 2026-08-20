@@ -33,7 +33,7 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 | ---- | --------------------------- | --------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
 | F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | done     |
 | S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | done     |
-| S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | proposed |
+| S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | done     |
 | S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | blocked  |
 | S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | proposed |
 | S-05 | add-plaintext-source        | add a plain-text file (lyrics, transcript) as a source                      | S-02          | FR-004                          | proposed |
@@ -103,7 +103,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Which LLM provider/model, and how is the per-source card-count cap enforced so cost stays bounded? — Owner: TBD (resolve in `/10x-plan`). Block: no.
   - How is the ≥ 75%-kept quality bar measured/validated in practice? — Owner: user. Block: no.
 - **Risk:** This is the north star and carries the product's riskiest assumption (generation quality). Sequenced as early as prerequisites allow. The LLM capability (SDK, API key, `maxDuration`/Fluid-Compute setup, input caps) is introduced here — its first and only consumer — rather than as a separate foundation, keeping the technical surface progressive. Watch the Vercel Fluid-Compute timeout footgun from `infrastructure.md`.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Export kept flashcards to CSV
 
@@ -177,3 +177,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **F-01: (foundation) the `sources` and `flashcards` persistence exists with row-level per-user isolation enforced, so a signed-in user's data is readable/writable only by them.** — Archived 2026-08-20 → `context/archive/2026-07-23-per-user-data-isolation/`. Lesson: —.
 
 - **S-01: user can upload a screenshot as a source and set that source's learning context (foreign language being learned + language(s) already known), which fixes the translation direction for later generation.** — Archived 2026-08-20 → `context/archive/2026-07-25-add-screenshot-source/`. Lesson: —.
+
+- **S-02: user can trigger generation for a source and get capped Q/A flashcards oriented learned → known (reusing an in-source translation when present, producing one when absent), can re-generate to replace the set, and reviews the cards on a single screen — discarding weak ones; the rest are kept. A source yielding no usable cards shows an explanatory state, not a silent empty result.** — Archived 2026-08-20 → `context/archive/2026-07-30-generate-and-review-cards/`. Lesson: —.

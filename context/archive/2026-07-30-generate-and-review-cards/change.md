@@ -2,9 +2,10 @@
 change_id: generate-and-review-cards
 roadmap_id: S-02
 title: Generate flashcards from a source and review them (keep/discard)
-status: implemented
+status: archived
 created: 2026-07-30
-updated: 2026-08-11
+archived_at: 2026-08-20T14:59:26Z
+updated: 2026-08-20
 prd_refs:
   - FR-007
   - FR-008
