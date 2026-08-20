@@ -1,7 +1,7 @@
 ---
 change_id: language-pair-nav
 title: Split dashboard by language pair with a top nav switcher
-status: implementing
+status: implemented
 created: 2026-08-20
 updated: 2026-08-20
 archived_at: null

@@ -226,10 +226,10 @@ Add the same nav to `/sources/[id]` so a user can jump straight to a different p
 
 #### Automated
 
-- [x] 3.1 Lint passes: `npm run lint`
-- [x] 3.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 3.1 Lint passes: `npm run lint` — 1b8becd
+- [x] 3.2 Build (includes Astro type checking) passes: `npm run build` — 1b8becd
 
 #### Manual
 
-- [x] 3.3 Source detail page shows the nav with the current pair highlighted
-- [x] 3.4 Clicking a different pair from the nav lands on that pair's dashboard, correctly scoped
+- [x] 3.3 Source detail page shows the nav with the current pair highlighted — 1b8becd
+- [x] 3.4 Clicking a different pair from the nav lands on that pair's dashboard, correctly scoped — 1b8becd
