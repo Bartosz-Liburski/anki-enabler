@@ -24,6 +24,12 @@ export const onRequest = defineMiddleware(async (context, next) => {
     }
   }
 
+  // Signed-in visitors land back on "/" after sign-in (see /api/auth/signin) — send them straight
+  // to the dashboard instead of the logged-out marketing hero.
+  if (context.url.pathname === "/" && context.locals.user) {
+    return context.redirect("/dashboard");
+  }
+
   // Learning-direction recall (S-01). The dashboard renders purely from its query params; this
   // keeps the pair cookie in sync with them and restores a remembered pair after the tab was
   // closed, so the page itself needs no cookie logic. `?pair=change` opts out.
