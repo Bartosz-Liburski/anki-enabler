@@ -2,7 +2,7 @@ import type { APIRoute } from "astro";
 import { createClient } from "@/lib/supabase";
 import { buildAnkiCsv, csvDownloadHeaders, exportFilename, type ExportCard } from "@/lib/anki-export";
 import type { SourceErrorCode } from "@/lib/source-errors";
-import { dashboardUrl } from "@/lib/source-pair";
+import { dashboardUrl, isValidPair } from "@/lib/source-pair";
 
 /**
  * Download every kept flashcard the user owns, across all sources, as one Anki CSV (S-03, FR-012).
@@ -33,6 +33,13 @@ export const GET: APIRoute = async (context) => {
 
   const fail = (code: SourceErrorCode) => context.redirect(dashboardUrl({ error: code }));
 
+  // Optional pair scoping (S-05): the dashboard's per-pair "Download CSV" link hits this same
+  // route with these params. Absent or invalid params fall back to the account-wide export
+  // unchanged — this endpoint still works exactly as before when hit with no params.
+  const learnedLanguage = context.url.searchParams.get("learned_language") ?? "";
+  const knownLanguage = context.url.searchParams.get("known_language") ?? "";
+  const pairFilter = isValidPair(learnedLanguage, knownLanguage) ? { learnedLanguage, knownLanguage } : null;
+
   // The embedded select rides the flashcards -> sources foreign key, so one round trip carries each
   // card and the pair that tags it. `!inner` makes the relation non-nullable in the result type;
   // the FK is NOT NULL, so it excludes nothing.
@@ -51,10 +58,18 @@ export const GET: APIRoute = async (context) => {
   // the file was short.
   const exportCards: ExportCard[] = [];
   for (let from = 0; ; from += PAGE_SIZE) {
-    const { data: page, error: readError } = await supabase
+    let query = supabase
       .from("flashcards")
       .select("front, back, sources!inner(learned_language, known_language)")
-      .eq("discarded", false)
+      .eq("discarded", false);
+
+    if (pairFilter) {
+      query = query
+        .eq("sources.learned_language", pairFilter.learnedLanguage)
+        .eq("sources.known_language", pairFilter.knownLanguage);
+    }
+
+    const { data: page, error: readError } = await query
       .order("source_id", { ascending: true })
       .order("created_at", { ascending: true })
       .order("id", { ascending: true })
@@ -81,5 +96,6 @@ export const GET: APIRoute = async (context) => {
     return fail("export-empty");
   }
 
-  return new Response(buildAnkiCsv(exportCards), { headers: csvDownloadHeaders(exportFilename(new Date())) });
+  const filename = exportFilename(new Date(), pairFilter ?? undefined);
+  return new Response(buildAnkiCsv(exportCards), { headers: csvDownloadHeaders(filename) });
 };

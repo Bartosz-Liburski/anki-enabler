@@ -49,6 +49,28 @@ export const onRequest = defineMiddleware(async (context, next) => {
         if (remembered) {
           return context.redirect(dashboardPairUrl(remembered, params));
         }
+
+        // No cookie either — default to the pair from the most recently added source, rather
+        // than showing the blank pick-a-pair screen to a returning user who already has sources.
+        // Scoped to this inner branch only: it must never fire on `?pair=change`, which is how
+        // "Add a language pair" reaches the blank picker on purpose.
+        if (supabase) {
+          const { data: mostRecent } = await supabase
+            .from("sources")
+            .select("learned_language, known_language")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (mostRecent) {
+            return context.redirect(
+              dashboardPairUrl(
+                { learnedLanguage: mostRecent.learned_language, knownLanguage: mostRecent.known_language },
+                params,
+              ),
+            );
+          }
+        }
       }
     }
   }
