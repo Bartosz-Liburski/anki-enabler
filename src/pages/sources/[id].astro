@@ -2,6 +2,7 @@
 import Layout from "@/layouts/Layout.astro";
 import ReviewCardList from "@/components/cards/ReviewCardList";
 import RegenerateForm from "@/components/cards/RegenerateForm";
+import DeleteSourceForm from "@/components/sources/DeleteSourceForm";
 import { createClient } from "@/lib/supabase";
 import { languageLabel } from "@/lib/languages";
 import { sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
@@ -175,6 +176,16 @@ const backToDashboard = source
                   </div>
                 </div>
               )}
+            </div>
+
+            {/* Outside the cards-present branch on purpose: a never-generated source is exactly the
+                kind a user wants to remove, so deletion must not depend on having cards. */}
+            <div class="mt-6 border-t border-white/10 pt-6">
+              <h2 class="text-lg font-semibold">Delete this source</h2>
+              <p class="mt-1 mb-3 text-sm text-blue-100/70">
+                Removes the screenshot and everything generated from it. Export anything you want to keep first.
+              </p>
+              <DeleteSourceForm sourceId={source.id} cardCount={cards.length} client:load />
             </div>
           </>
         )

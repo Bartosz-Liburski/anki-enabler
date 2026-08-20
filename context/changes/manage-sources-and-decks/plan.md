@@ -337,34 +337,34 @@ of this code does not restore anything a user deleted while it was live.
 
 #### Automated
 
-- [x] 1.1 Linting passes: `npm run lint`
-- [x] 1.2 Type checking passes: `npx astro check`
-- [x] 1.3 Build succeeds: `npm run build`
+- [x] 1.1 Linting passes: `npm run lint` — 5b0e892
+- [x] 1.2 Type checking passes: `npx astro check` — 5b0e892
+- [x] 1.3 Build succeeds: `npm run build` — 5b0e892
 
 #### Manual
 
-- [x] 1.4 Two sources under different pairs render as two groups, each labelled by its first card's front
-- [x] 1.5 Counts read correctly after discarding some cards and saving
-- [x] 1.6 A never-generated source and a zero-card source both render with the fallback label, not blank
-- [x] 1.7 Clicking a deck opens that source's review screen
-- [x] 1.8 A brand-new account sees the explanatory panel, not an empty region
-- [x] 1.9 The widened dashboard still reads correctly on a narrow phone viewport
-- [x] 1.10 A second account sees only its own decks
+- [x] 1.4 Two sources under different pairs render as two groups, each labelled by its first card's front — 5b0e892
+- [x] 1.5 Counts read correctly after discarding some cards and saving — 5b0e892
+- [x] 1.6 A never-generated source and a zero-card source both render with the fallback label, not blank — 5b0e892
+- [x] 1.7 Clicking a deck opens that source's review screen — 5b0e892
+- [x] 1.8 A brand-new account sees the explanatory panel, not an empty region — 5b0e892
+- [x] 1.9 The widened dashboard still reads correctly on a narrow phone viewport — 5b0e892
+- [x] 1.10 A second account sees only its own decks — 5b0e892
 
 ### Phase 2: Delete a Source
 
 #### Automated
 
-- [ ] 2.1 Linting passes: `npm run lint`
-- [ ] 2.2 Type checking passes: `npx astro check`
-- [ ] 2.3 Build succeeds: `npm run build`
+- [x] 2.1 Linting passes: `npm run lint`
+- [x] 2.2 Type checking passes: `npx astro check`
+- [x] 2.3 Build succeeds: `npm run build`
 
 #### Manual
 
-- [ ] 2.4 The first click warns and does not delete; the second deletes and lands on the dashboard with a confirmation
-- [ ] 2.5 The deleted deck is gone from the dashboard list and its cards are gone from the database
-- [ ] 2.6 The source's object is no longer in the `screenshots` bucket
-- [ ] 2.7 Posting to the delete route without the confirm field deletes nothing and returns the confirm-required banner
-- [ ] 2.8 A never-generated source can be deleted
-- [ ] 2.9 Deleting another user's source id changes nothing and reveals nothing
-- [ ] 2.10 Deleting the last source in a pair group removes the whole group, and deleting the last source overall shows the empty panel again
+- [x] 2.4 The first click warns and does not delete; the second deletes and lands on the dashboard with a confirmation
+- [x] 2.5 The deleted deck is gone from the dashboard list and its cards are gone from the database
+- [x] 2.6 The source's object is no longer in the `screenshots` bucket
+- [x] 2.7 Posting to the delete route without the confirm field deletes nothing and returns the confirm-required banner
+- [x] 2.8 A never-generated source can be deleted
+- [x] 2.9 Deleting another user's source id changes nothing and reveals nothing
+- [x] 2.10 Deleting the last source in a pair group removes the whole group, and deleting the last source overall shows the empty panel again

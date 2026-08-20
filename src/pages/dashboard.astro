@@ -5,12 +5,7 @@ import LanguagePairForm from "@/components/sources/LanguagePairForm";
 import { createClient } from "@/lib/supabase";
 import { toDeckGroups } from "@/lib/decks";
 import { languageLabel } from "@/lib/languages";
-import {
-  isExportErrorCode,
-  SOURCE_SUCCESS_CODE,
-  SOURCE_SUCCESS_MESSAGE,
-  sourceErrorMessage,
-} from "@/lib/source-errors";
+import { isExportErrorCode, sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
 import { isValidPair, sourceUrl } from "@/lib/source-pair";
 
 const { user } = Astro.locals;
@@ -35,7 +30,10 @@ const errorMessage = sourceErrorMessage(errorCode);
 const isExportError = isExportErrorCode(errorCode);
 const exportError = isExportError ? errorMessage : null;
 const error = isExportError ? null : errorMessage;
-const success = Astro.url.searchParams.get("success") === SOURCE_SUCCESS_CODE ? SOURCE_SUCCESS_MESSAGE : null;
+// Goes through the shared resolver rather than testing one code by hand: S-04's delete redirects
+// here with `source-deleted`, and a hand-rolled equality check would have rendered nothing at all
+// for it — a successful deletion that looks like nothing happened.
+const success = sourceSuccessMessage(Astro.url.searchParams.get("success"));
 
 // Gates the account-wide export link (S-03). A head-only count, scoped to the user by RLS — the
 // dashboard needs the number, not the rows.

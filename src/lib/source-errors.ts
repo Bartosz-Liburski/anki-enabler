@@ -32,7 +32,10 @@ export type SourceErrorCode =
   | "review-save-failed"
   // CSV export (S-03)
   | "export-empty"
-  | "export-failed";
+  | "export-failed"
+  // Source deletion (S-04)
+  | "delete-confirm-required"
+  | "delete-failed";
 
 export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   "file-missing": "Pick a screenshot to upload.",
@@ -62,6 +65,10 @@ export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   // that source has been discarded.
   "export-empty": "There are no kept flashcards to export. Keep at least one card first.",
   "export-failed": "Building the CSV export failed. Nothing was downloaded — try again.",
+  // Reachable only by posting to the delete route without the confirm field — the island always
+  // sends it. The guard is server-side precisely so an unhydrated or bypassed page cannot delete.
+  "delete-confirm-required": "Deleting a source needs confirmation. Nothing was deleted.",
+  "delete-failed": "Deleting this source failed. Nothing was deleted — try again.",
 };
 
 /**
@@ -93,11 +100,18 @@ export const CARDS_NONE_CODE = "cards-none";
 /** The review screen's keep/discard choices were persisted. */
 export const CARDS_SAVED_CODE = "cards-saved";
 
+/**
+ * A source and everything belonging to it are gone (S-04). Lands on the dashboard, not the source
+ * page — that page no longer exists.
+ */
+export const SOURCE_DELETED_CODE = "source-deleted";
+
 export type SourceSuccessCode =
   | typeof SOURCE_SUCCESS_CODE
   | typeof CARDS_GENERATED_CODE
   | typeof CARDS_NONE_CODE
-  | typeof CARDS_SAVED_CODE;
+  | typeof CARDS_SAVED_CODE
+  | typeof SOURCE_DELETED_CODE;
 
 export function sourceErrorMessage(code: string | null): string | null {
   if (!code) return null;
@@ -122,6 +136,8 @@ export function sourceSuccessMessage(code: string | null, count?: number): strin
         : `Generated ${count ?? 0} flashcards. Discard the weak ones, then save.`;
     case CARDS_NONE_CODE:
       return "No flashcards could be made from this screenshot. The reason is below.";
+    case SOURCE_DELETED_CODE:
+      return "Source deleted, along with its flashcards and its screenshot.";
     case CARDS_SAVED_CODE:
       return "Saved. The cards you kept are the ones you'll export.";
     default:
