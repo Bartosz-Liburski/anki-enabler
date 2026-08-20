@@ -146,17 +146,17 @@ queries; establishes the generation convention now while the schema is tiny.
 
 #### Automated Verification:
 
-- [ ] Migration file exists: `ls supabase/migrations/*_init_sources_flashcards.sql`
-- [ ] Migration applies cleanly to the linked project: `supabase db push`
-- [ ] Types file exists and is non-empty: `test -s src/db/database.types.ts`
-- [ ] Type checking passes: `npx astro sync && npx astro check`
-- [ ] Linting passes: `npm run lint`
+- [x] Migration file exists: `ls supabase/migrations/*_init_sources_flashcards.sql`
+- [x] Migration applies cleanly to the linked project: `supabase db push`
+- [x] Types file exists and is non-empty: `test -s src/db/database.types.ts`
+- [x] Type checking passes: `npx astro sync && npx astro check`
+- [x] Linting passes: `npm run lint`
 
 #### Manual Verification:
 
-- [ ] Confirm `SUPABASE_KEY` in the environment is the anon/publishable key, not service_role
-- [ ] In Supabase Studio, both tables show RLS **enabled** with exactly one policy each
-- [ ] `database.types.ts` reflects both tables (`sources`, `flashcards`) with the expected columns
+- [x] Confirm `SUPABASE_KEY` in the environment is the anon/publishable key, not service_role
+- [x] In Supabase Studio, both tables show RLS **enabled** with exactly one policy each
+- [x] `database.types.ts` reflects both tables (`sources`, `flashcards`) with the expected columns
 
 **Implementation Note**: After Phase 1's automated checks pass, pause for manual confirmation
 (especially the anon-key check) before proceeding to Phase 2.
@@ -202,14 +202,14 @@ re-run after any schema/RLS change.
 
 #### Automated Verification:
 
-- [ ] Script file exists: `ls supabase/tests/isolation.sql`
-- [ ] Script runs green against the linked project (all assertions pass, no exception raised)
+- [x] Script file exists: `ls supabase/tests/isolation.sql`
+- [x] Script runs green against the linked project (all assertions pass, no exception raised)
 
 #### Manual Verification:
 
-- [ ] Deliberately weaken one policy (temporarily) and confirm the script **fails** — proving
+- [x] Deliberately weaken one policy (temporarily) and confirm the script **fails** — proving
       the assertions actually catch a leak, not just pass vacuously
-- [ ] Confirm the source→flashcards cascade: deleting a seeded source removes its flashcards
+- [x] Confirm the source→flashcards cascade: deleting a seeded source removes its flashcards
 
 **Implementation Note**: After Phase 2 passes, F-01 is complete and S-01 is unblocked.
 
