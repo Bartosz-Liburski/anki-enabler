@@ -22,6 +22,9 @@ export default defineConfig({
     schema: {
       SUPABASE_URL: envField.string({ context: "server", access: "secret", optional: true }),
       SUPABASE_KEY: envField.string({ context: "server", access: "secret", optional: true }),
+      // Optional like the Supabase entries so the app still builds without it; a missing key
+      // surfaces as a config banner (src/lib/config-status.ts) rather than a runtime failure.
+      ANTHROPIC_API_KEY: envField.string({ context: "server", access: "secret", optional: true }),
     },
   },
 });

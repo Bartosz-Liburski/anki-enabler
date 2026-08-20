@@ -1,0 +1,15 @@
+{
+  "image": "puoi-vedere-piazza.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "Puoi vedere una piazza.",
+      "back": "You can see a square.",
+      "backAlternatives": ["You can see a plaza."]
+    }
+  ],
+  "sourceHadTranslation": true,
+  "note": "Same shape as prendo-l-autobus — English answer spread across word-bank tiles ('You' 'can' 'see' 'a' 'square') rather than stated as a prose translation. Same caveat about sourceHadTranslation being a judgement call."
+}

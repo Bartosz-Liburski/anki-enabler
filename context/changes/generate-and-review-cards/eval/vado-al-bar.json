@@ -1,0 +1,15 @@
+{
+  "image": "vado-al-bar.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "Vado al bar alle otto.",
+      "back": "I go to the cafe at eight.",
+      "backAlternatives": ["I go to the bar at eight."]
+    }
+  ],
+  "sourceHadTranslation": true,
+  "note": "Duolingo 'Tap what you hear' with the answer revealed: the Italian is spelled out in word tiles and the English sits under 'Nice! Meaning:'. Single phrase, so exactly one card. Over-splitting into the individual word tiles would be the failure this fixture catches."
+}

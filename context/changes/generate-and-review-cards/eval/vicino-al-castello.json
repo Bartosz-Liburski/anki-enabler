@@ -1,0 +1,15 @@
+{
+  "image": "vicino-al-castello.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "vicino al castello",
+      "back": "near the castle",
+      "backAlternatives": ["close to the castle", "next to the castle"]
+    }
+  ],
+  "sourceHadTranslation": true,
+  "note": "A fragment rather than a full sentence — three word tiles plus 'Nice! Meaning: near the castle'. Still one learnable item, so one card."
+}

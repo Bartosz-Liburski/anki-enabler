@@ -1,0 +1,14 @@
+{
+  "image": "museo-aperto.jpeg",
+  "learnedLanguage": "it",
+  "knownLanguage": "en",
+  "expectedCardCount": 1,
+  "expectedCards": [
+    {
+      "front": "Il museo è aperto alle sette?",
+      "back": "Is the museum open at seven?"
+    }
+  ],
+  "sourceHadTranslation": true,
+  "note": "Same shape as vado-al-bar: Italian in word tiles, English under 'Nicely done. Meaning:'. The tiles carry no punctuation while the meaning is interrogative — the harness strips punctuation before comparing, so a front with or without the question mark both match. Diacritic in 'è' is NOT folded, so dropping it counts as wrong."
+}

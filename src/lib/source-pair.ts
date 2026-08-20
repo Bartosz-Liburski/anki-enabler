@@ -1,0 +1,87 @@
+import type { AstroCookies } from "astro";
+import { isSupportedLanguage } from "@/lib/languages";
+
+/**
+ * Where the chosen learning direction lives (S-01).
+ *
+ * The URL is the rendering source of truth — the dashboard branches on its query params, and
+ * `POST /api/sources` echoes them back so one pair takes many uploads in a row. This cookie is
+ * only the *recall* layer: it survives closing the tab, and a bare `/dashboard` visit is
+ * redirected to the canonical pair URL so there is still exactly one code path for rendering.
+ *
+ * Read values are re-validated against the curated language list rather than trusted, since a
+ * cookie is client-supplied.
+ */
+
+export const PAIR_COOKIE = "anki_source_pair";
+
+const ONE_YEAR_IN_SECONDS = 60 * 60 * 24 * 365;
+
+export interface LanguagePair {
+  learnedLanguage: string;
+  knownLanguage: string;
+}
+
+export function isValidPair(learnedLanguage: string, knownLanguage: string): boolean {
+  return (
+    isSupportedLanguage(learnedLanguage) && isSupportedLanguage(knownLanguage) && learnedLanguage !== knownLanguage
+  );
+}
+
+export function readPairCookie(cookies: AstroCookies): LanguagePair | null {
+  const raw = cookies.get(PAIR_COOKIE)?.value;
+  if (!raw) return null;
+
+  const [learnedLanguage = "", knownLanguage = ""] = raw.split(":");
+  return isValidPair(learnedLanguage, knownLanguage) ? { learnedLanguage, knownLanguage } : null;
+}
+
+export function writePairCookie(cookies: AstroCookies, pair: LanguagePair): void {
+  cookies.set(PAIR_COOKIE, `${pair.learnedLanguage}:${pair.knownLanguage}`, {
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secure: import.meta.env.PROD,
+    maxAge: ONE_YEAR_IN_SECONDS,
+  });
+}
+
+export function clearPairCookie(cookies: AstroCookies): void {
+  cookies.delete(PAIR_COOKIE, { path: "/" });
+}
+
+/** Build a `/dashboard` URL; the single place that spells these param names. */
+export function dashboardUrl(params: Record<string, string>): string {
+  return `/dashboard?${new URLSearchParams(params).toString()}`;
+}
+
+/**
+ * Build a `/sources/{id}` URL — where S-02's generation and review outcomes land.
+ *
+ * Lives next to `dashboardUrl` for the same reason: one place spells the outcome param names, so
+ * an endpoint and the page that reads them cannot drift apart.
+ */
+export function sourceUrl(id: string, params: Record<string, string> = {}): string {
+  const query = new URLSearchParams(params).toString();
+  return query ? `/sources/${id}?${query}` : `/sources/${id}`;
+}
+
+/**
+ * Canonical dashboard URL for a pair, preserving any outcome params from the URL being replaced.
+ *
+ * The endpoint's language-level failures redirect without a pair, so this recall redirect would
+ * otherwise swallow their `?error=` and leave the user on a silent dashboard.
+ */
+export function dashboardPairUrl(pair: LanguagePair, carryOver?: URLSearchParams): string {
+  const params: Record<string, string> = {
+    learned_language: pair.learnedLanguage,
+    known_language: pair.knownLanguage,
+  };
+
+  for (const key of ["error", "success"] as const) {
+    const value = carryOver?.get(key);
+    if (value) params[key] = value;
+  }
+
+  return dashboardUrl(params);
+}

@@ -111,12 +111,14 @@ enabled = true
 # The maximum file size allowed (e.g. "5MB", "500KB").
 file_size_limit = "50MiB"
 
-# Uncomment to configure local storage buckets
-# [storage.buckets.images]
-# public = false
-# file_size_limit = "50MiB"
-# allowed_mime_types = ["image/png", "image/jpeg"]
-# objects_path = "./images"
+# Private bucket for uploaded screenshot sources (S-01). Mirrors the hosted bucket
+# provisioned in migration 20260726105652_add_screenshot_source_fields.sql; the 5 MiB
+# limit + png/jpeg allowlist match the shared app constant (src/lib/upload-limits.ts).
+[storage.buckets.screenshots]
+public = false
+file_size_limit = "5MiB"
+allowed_mime_types = ["image/png", "image/jpeg"]
+objects_path = "./screenshots"
 
 # Allow connections via S3 compatible clients
 [storage.s3_protocol]

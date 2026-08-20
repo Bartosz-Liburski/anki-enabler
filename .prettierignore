@@ -1,0 +1,2 @@
+# Supabase-generated schema types — regenerated via `supabase gen types`, never hand-edited.
+src/db/database.types.ts
