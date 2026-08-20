@@ -6,11 +6,11 @@ import { dashboardUrl, sourceUrl } from "@/lib/source-pair";
 /**
  * Persist the whole card set's keep/discard decisions in one call (S-02, FR-010).
  *
- * **"Not in the list" is the only way an un-discard can be expressed.** An unchecked checkbox
- * submits nothing, so the request carries the discarded ids and says nothing at all about the
- * kept ones. This endpoint therefore rewrites the flag for *every* card of the source — listed
- * ids become `discarded = true`, everything else `false`. Updating only the listed ids would make
- * un-discarding silently impossible.
+ * **"Not in the list" is the only way a discard can be expressed.** An unchecked checkbox submits
+ * nothing, so the request carries the kept ids and says nothing at all about the discarded ones.
+ * This endpoint therefore rewrites the flag for *every* card of the source — listed ids become
+ * `discarded = false`, everything else `true`. Updating only the listed ids would make discarding
+ * silently impossible.
  *
  * The source's own card ids are read first and the submitted ids intersected against them, rather
  * than trusting the form. That does two jobs: a forged id belonging to another source (or another
@@ -34,7 +34,7 @@ export const POST: APIRoute = async (context) => {
   const fail = (code: SourceErrorCode) => context.redirect(sourceUrl(id, { error: code }));
 
   const form = await context.request.formData();
-  const submitted = new Set(form.getAll("discard").filter((value): value is string => typeof value === "string"));
+  const submitted = new Set(form.getAll("keep").filter((value): value is string => typeof value === "string"));
 
   const { data: cards, error: readError } = await supabase.from("flashcards").select("id").eq("source_id", id);
   if (readError) {
@@ -42,8 +42,8 @@ export const POST: APIRoute = async (context) => {
   }
 
   const ownIds = cards.map((card) => card.id);
-  const toDiscard = ownIds.filter((cardId) => submitted.has(cardId));
-  const toKeep = ownIds.filter((cardId) => !submitted.has(cardId));
+  const toKeep = ownIds.filter((cardId) => submitted.has(cardId));
+  const toDiscard = ownIds.filter((cardId) => !submitted.has(cardId));
 
   if (toDiscard.length > 0) {
     const { error } = await supabase

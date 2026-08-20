@@ -76,11 +76,11 @@ export default function ReviewCardList({
               <label className="flex cursor-pointer items-start gap-3">
                 <input
                   type="checkbox"
-                  name="discard"
+                  name="keep"
                   value={card.id}
-                  checked={isDiscarded}
+                  checked={!isDiscarded}
                   onChange={(event) => {
-                    toggle(card.id, event.currentTarget.checked);
+                    toggle(card.id, !event.currentTarget.checked);
                   }}
                   className="mt-1 size-4 shrink-0 accent-purple-500"
                 />
@@ -108,7 +108,7 @@ export default function ReviewCardList({
         Save review
       </SubmitButton>
       <p className="text-xs text-blue-100/50">
-        Ticking a card discards it. Kept cards are the ones you&apos;ll export.
+        Ticking a card keeps it. Untick to discard it — kept cards are the ones you&apos;ll export.
       </p>
     </form>
   );
