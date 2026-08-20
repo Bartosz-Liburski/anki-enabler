@@ -34,7 +34,7 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 | F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | done     |
 | S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | done     |
 | S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | done     |
-| S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | blocked  |
+| S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | done     |
 | S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | proposed |
 | S-05 | add-plaintext-source        | add a plain-text file (lyrics, transcript) as a source                      | S-02          | FR-004                          | proposed |
 
@@ -116,7 +116,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Exact CSV column layout — front/back order, delimiter, header row, tags/deck column — must match the target SRS import format. — Owner: user. Block: yes.
 - **Risk:** Completes the core loop but is `blocked` until the CSV-layout Open Question resolves; an unspecified format produces an export nothing can import. Small once the format is decided.
-- **Status:** blocked
+- **Status:** done
 
 ### S-04: Browse and manage sources/decks
 
@@ -179,3 +179,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-01: user can upload a screenshot as a source and set that source's learning context (foreign language being learned + language(s) already known), which fixes the translation direction for later generation.** — Archived 2026-08-20 → `context/archive/2026-07-25-add-screenshot-source/`. Lesson: —.
 
 - **S-02: user can trigger generation for a source and get capped Q/A flashcards oriented learned → known (reusing an in-source translation when present, producing one when absent), can re-generate to replace the set, and reviews the cards on a single screen — discarding weak ones; the rest are kept. A source yielding no usable cards shows an explanatory state, not a silent empty result.** — Archived 2026-08-20 → `context/archive/2026-07-30-generate-and-review-cards/`. Lesson: —.
+
+- **S-03: user can export the kept flashcards (those not discarded) to a CSV file suitable for import into their SRS tool.** — Archived 2026-08-20 → `context/archive/2026-08-11-export-kept-cards-csv/`. Lesson: —.
