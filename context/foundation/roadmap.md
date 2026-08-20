@@ -3,7 +3,7 @@ project: "Anki enabler"
 version: 1
 status: draft
 created: 2026-07-23
-updated: 2026-07-23
+updated: 2026-08-20
 prd_version: 1
 main_goal: low-complexity
 top_blocker: time
@@ -31,7 +31,7 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 
 | ID   | Change ID                   | Outcome (user can …)                                                        | Prerequisites | PRD refs                        | Status   |
 | ---- | --------------------------- | --------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
-| F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | ready    |
+| F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | done     |
 | S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | proposed |
 | S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | proposed |
 | S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | blocked  |
@@ -74,7 +74,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Sequenced first because the privacy NFR gates launch and cross-user data leakage is the #1 risk in `infrastructure.md`'s pre-mortem (module-scope client reuse leaking sessions). Kept minimal — this establishes the isolation contract and the two tables the first slice needs, not a complete data layer; S-01/S-02 still add their own columns and exercise the tables through user features.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -173,3 +173,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate.)
+
+- **F-01: (foundation) the `sources` and `flashcards` persistence exists with row-level per-user isolation enforced, so a signed-in user's data is readable/writable only by them.** — Archived 2026-08-20 → `context/archive/2026-07-23-per-user-data-isolation/`. Lesson: —.
