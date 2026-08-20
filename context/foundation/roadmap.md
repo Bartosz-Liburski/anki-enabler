@@ -35,7 +35,7 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 | S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | done     |
 | S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | done     |
 | S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | done     |
-| S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | proposed |
+| S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | done     |
 | S-05 | add-plaintext-source        | add a plain-text file (lyrics, transcript) as a source                      | S-02          | FR-004                          | proposed |
 
 ## Streams
@@ -128,7 +128,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Navigation and cleanup over data that S-01/S-02 already create; no separate source-browser screen (sources surface via their deck, per FR-005). FR-011 (grouping) is nice-to-have and can be trimmed under the time budget without dropping the must-have delete/browse behaviour.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Add a plain-text file as a source
 
@@ -181,3 +181,5 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **S-02: user can trigger generation for a source and get capped Q/A flashcards oriented learned → known (reusing an in-source translation when present, producing one when absent), can re-generate to replace the set, and reviews the cards on a single screen — discarding weak ones; the rest are kept. A source yielding no usable cards shows an explanatory state, not a silent empty result.** — Archived 2026-08-20 → `context/archive/2026-07-30-generate-and-review-cards/`. Lesson: —.
 
 - **S-03: user can export the kept flashcards (those not discarded) to a CSV file suitable for import into their SRS tool.** — Archived 2026-08-20 → `context/archive/2026-08-11-export-kept-cards-csv/`. Lesson: —.
+
+- **S-04: user can browse their saved sources through the deck view, see cards grouped by source/deck, and delete a source — which cascades to delete the flashcards generated from it.** — Archived 2026-08-20 → `context/archive/2026-08-20-manage-sources-and-decks/`. Lesson: —.
