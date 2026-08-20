@@ -1,9 +1,11 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import PairNav from "@/components/PairNav.astro";
 import AddSourceForm from "@/components/sources/AddSourceForm";
 import LanguagePairForm from "@/components/sources/LanguagePairForm";
 import { createClient } from "@/lib/supabase";
 import { toDeckGroups } from "@/lib/decks";
+import { toPairSummaries } from "@/lib/pairs";
 import { languageLabel } from "@/lib/languages";
 import { isExportErrorCode, sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
 import { isValidPair, sourceUrl } from "@/lib/source-pair";
@@ -35,44 +37,63 @@ const error = isExportError ? null : errorMessage;
 // for it — a successful deletion that looks like nothing happened.
 const success = sourceSuccessMessage(Astro.url.searchParams.get("success"));
 
-// Gates the account-wide export link (S-03). A head-only count, scoped to the user by RLS — the
-// dashboard needs the number, not the rows.
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+
+// Language-pair nav (S-05). A lightweight query — no flashcards embedded — since this only ranks
+// pairs by recency; the pair-scoped deck list below runs its own, separate query.
+const { data: pairRows } = supabase
+  ? await supabase.from("sources").select("learned_language, known_language, created_at")
+  : { data: null };
+const pairs = toPairSummaries(pairRows ?? []);
+
+// Gates the pair-scoped export link (S-03, S-05). A head-only count, filtered to the active pair
+// the same way the export endpoint itself filters — RLS still scopes both to the user.
 //
 // A failed count must NOT hide the feature. Treating the error as zero would make the whole export
 // section vanish for a user with hundreds of kept cards, with nothing on the page to explain it.
 // The link is offered anyway and the count omitted from the copy; the route carries its own
 // `export-empty` guard, so an optimistic link costs at worst one redirect with a banner.
-const supabase = createClient(Astro.request.headers, Astro.cookies);
-const { count, error: countError } = supabase
-  ? await supabase.from("flashcards").select("id", { count: "exact", head: true }).eq("discarded", false)
-  : { count: 0, error: null };
+const { count, error: countError } =
+  supabase && pairReady
+    ? await supabase
+        .from("flashcards")
+        .select("id, sources!inner(learned_language, known_language)", { count: "exact", head: true })
+        .eq("discarded", false)
+        .eq("sources.learned_language", learnedLanguage)
+        .eq("sources.known_language", knownLanguage)
+    : { count: 0, error: null };
 const countFailed = countError !== null;
 const keptCount = count ?? 0;
 const canExport = countFailed || keptCount > 0;
+const exportCsvUrl = `/api/export.csv?${new URLSearchParams({
+  learned_language: learnedLanguage,
+  known_language: knownLanguage,
+}).toString()}`;
 
-// The deck list (S-04). One embedded select rides the flashcards -> sources foreign key, so a
-// deck's label, its kept count, and its total all come from a single round trip. RLS scopes both
-// sides; ordering here matches what `toDeckGroups` does anyway, which costs nothing and keeps the
-// query and the module from disagreeing.
+// The deck list (S-04, S-05). Scoped to the active pair — one embedded select rides the
+// flashcards -> sources foreign key, so a deck's label, its kept count, and its total all come
+// from a single round trip. RLS scopes both sides.
 //
 // Deliberately not paged, unlike S-03's export routes: PostgREST truncates at 1000 rows, but a
 // short LIST is visible to the user and destroys nothing, where a short export file silently loses
 // cards they believe they exported. See the plan's Performance Considerations.
-const { data: sourceRows, error: decksError } = supabase
-  ? await supabase
-      .from("sources")
-      .select("id, learned_language, known_language, created_at, flashcards(id, front, discarded, created_at)")
-      .order("learned_language", { ascending: true })
-      .order("known_language", { ascending: true })
-      .order("created_at", { ascending: false })
-      .order("created_at", { referencedTable: "flashcards", ascending: true })
-      .order("id", { referencedTable: "flashcards", ascending: true })
-  : { data: null, error: null };
+const { data: sourceRows, error: decksError } =
+  supabase && pairReady
+    ? await supabase
+        .from("sources")
+        .select("id, learned_language, known_language, created_at, flashcards(id, front, discarded, created_at)")
+        .eq("learned_language", learnedLanguage)
+        .eq("known_language", knownLanguage)
+        .order("created_at", { ascending: false })
+        .order("created_at", { referencedTable: "flashcards", ascending: true })
+        .order("id", { referencedTable: "flashcards", ascending: true })
+    : { data: null, error: null };
 
 // A failed query must not render as "no decks" — that is the shape S-03's review caught on the
 // export count, where a silent failure was indistinguishable from an empty result.
 const decksFailed = decksError !== null;
-const deckGroups = toDeckGroups(sourceRows ?? []);
+// Filtered to one pair above, so there is at most one group — flatten it into a plain deck list.
+const decks = toDeckGroups(sourceRows ?? [])[0]?.decks ?? [];
 
 const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" });
 ---
@@ -88,6 +109,8 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
       <p class="text-blue-100/80">
         Welcome, <span class="font-semibold text-white">{user?.email}</span>
       </p>
+
+      <PairNav pairs={pairs} activeLearnedLanguage={learnedLanguage} activeKnownLanguage={knownLanguage} />
 
       {
         success && (
@@ -114,19 +137,11 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
         {
           pairReady ? (
             <>
-              <div class="mb-4 flex items-center justify-between gap-3">
-                <div class="text-left">
-                  <p class="text-xs tracking-wide text-blue-100/50 uppercase">Learning direction</p>
-                  <p class="font-semibold">
-                    {languageLabel(learnedLanguage)} → {languageLabel(knownLanguage)}
-                  </p>
-                </div>
-                <a
-                  href="/dashboard?pair=change"
-                  class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs transition-colors hover:bg-white/20"
-                >
-                  Change
-                </a>
+              <div class="mb-4 text-left">
+                <p class="text-xs tracking-wide text-blue-100/50 uppercase">Learning direction</p>
+                <p class="font-semibold">
+                  {languageLabel(learnedLanguage)} → {languageLabel(knownLanguage)}
+                </p>
               </div>
               <AddSourceForm
                 learnedLanguage={learnedLanguage}
@@ -155,55 +170,48 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
         }
       </div>
 
-      <div class="mt-6 border-t border-white/10 pt-6 text-left">
-        <h2 class="text-lg font-semibold">Your decks</h2>
+      {
+        pairReady && (
+          <div class="mt-6 border-t border-white/10 pt-6 text-left">
+            <h2 class="text-lg font-semibold">Your decks</h2>
 
-        {
-          decksFailed ? (
-            <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
-              Your decks couldn't be loaded. Reload the page to try again — nothing has been lost.
-            </p>
-          ) : deckGroups.length === 0 ? (
-            <p class="mt-3 rounded-lg border border-white/15 bg-white/5 px-3 py-3 text-sm text-blue-100/70">
-              Your decks will appear here. Every screenshot you add becomes a deck of flashcards you can review, and the
-              ones you keep are what you export.
-            </p>
-          ) : (
-            <div class="mt-4 space-y-5">
-              {deckGroups.map((group) => (
-                <div>
-                  <h3 class="text-xs tracking-wide text-blue-100/50 uppercase">
-                    {languageLabel(group.learnedLanguage)} → {languageLabel(group.knownLanguage)}
-                  </h3>
-                  <ul class="mt-2 space-y-2">
-                    {group.decks.map((deck) => (
-                      <li>
-                        <a
-                          href={sourceUrl(deck.id)}
-                          class="block rounded-lg border border-white/15 bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
-                        >
-                          <span class="line-clamp-2 block font-medium break-words">{deck.label}</span>
-                          <span class="mt-1 block text-xs text-blue-100/50">
-                            {deck.totalCount > 0 && (
-                              <>
-                                {deck.keptCount} of {deck.totalCount} kept ·{" "}
-                              </>
-                            )}
-                            {deckDate.format(new Date(deck.createdAt))}
-                          </span>
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          )
-        }
-      </div>
+            {decksFailed ? (
+              <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                Your decks couldn't be loaded. Reload the page to try again — nothing has been lost.
+              </p>
+            ) : decks.length === 0 ? (
+              <p class="mt-3 rounded-lg border border-white/15 bg-white/5 px-3 py-3 text-sm text-blue-100/70">
+                Your decks will appear here. Every screenshot you add becomes a deck of flashcards you can review, and
+                the ones you keep are what you export.
+              </p>
+            ) : (
+              <ul class="mt-4 space-y-2">
+                {decks.map((deck) => (
+                  <li>
+                    <a
+                      href={sourceUrl(deck.id)}
+                      class="block rounded-lg border border-white/15 bg-white/5 px-3 py-2 transition-colors hover:bg-white/10"
+                    >
+                      <span class="line-clamp-2 block font-medium break-words">{deck.label}</span>
+                      <span class="mt-1 block text-xs text-blue-100/50">
+                        {deck.totalCount > 0 && (
+                          <>
+                            {deck.keptCount} of {deck.totalCount} kept ·{" "}
+                          </>
+                        )}
+                        {deckDate.format(new Date(deck.createdAt))}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )
+      }
 
       {
-        (canExport || exportError) && (
+        pairReady && (canExport || exportError) && (
           <div class="mt-6 border-t border-white/10 pt-6 text-left">
             <h2 class="text-lg font-semibold">Export to Anki</h2>
 
@@ -217,11 +225,10 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
               <>
                 <p class="mt-1 text-sm text-blue-100/60">
                   Downloads {countFailed ? "the cards" : keptCount === 1 ? "the 1 card" : `all ${keptCount} cards`}{" "}
-                  you've kept across every source as one CSV. Each row is tagged with its own learning direction, so you
-                  can split them by tag in Anki.
+                  you've kept in this pair as one CSV that imports straight into Anki.
                 </p>
                 <a
-                  href="/api/export.csv"
+                  href={exportCsvUrl}
                   class="mt-3 inline-block rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm transition-colors hover:bg-white/20"
                 >
                   Download CSV
