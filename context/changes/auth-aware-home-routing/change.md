@@ -1,7 +1,7 @@
 ---
 change_id: auth-aware-home-routing
 title: Auth aware home routing
-status: implementing
+status: implemented
 created: 2026-08-20
 updated: 2026-08-20
 archived_at: null

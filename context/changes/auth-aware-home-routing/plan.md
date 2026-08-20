@@ -126,13 +126,13 @@ Redirect authenticated visitors away from the logged-out home hero straight to `
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 1.1 Lint passes: `npm run lint` — 6409780
+- [x] 1.2 Build (includes Astro type checking) passes: `npm run build` — 6409780
 
 #### Manual
 
-- [x] 1.3 Log in via `/auth/signin` and land directly on the full-width `/dashboard`, no hero flash
-- [x] 1.4 While logged in, navigate directly to `/` and confirm redirect to `/dashboard`
-- [x] 1.5 Log out, visit `/`, confirm normal Sign In / Sign Up hero renders
-- [x] 1.6 Confirm `/dashboard` card spans a wider container and starts near the top of the viewport
-- [x] 1.7 Confirm "Leave dashboard" link is gone and "Sign out" still works
+- [x] 1.3 Log in via `/auth/signin` and land directly on the full-width `/dashboard`, no hero flash — 6409780
+- [x] 1.4 While logged in, navigate directly to `/` and confirm redirect to `/dashboard` — 6409780
+- [x] 1.5 Log out, visit `/`, confirm normal Sign In / Sign Up hero renders — 6409780
+- [x] 1.6 Confirm `/dashboard` card spans a wider container and starts near the top of the viewport — 6409780
+- [x] 1.7 Confirm "Leave dashboard" link is gone and "Sign out" still works — 6409780
