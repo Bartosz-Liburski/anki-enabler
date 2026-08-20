@@ -88,12 +88,20 @@ const backToDashboard = source
                   {languageLabel(source.learned_language)} → {languageLabel(source.known_language)}
                 </p>
               </div>
-              <a
-                href={backToDashboard}
-                class="shrink-0 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs transition-colors hover:bg-white/20"
-              >
-                Add another
-              </a>
+              <div class="flex shrink-0 items-center gap-2">
+                <a
+                  href="/dashboard"
+                  class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs transition-colors hover:bg-white/20"
+                >
+                  Dashboard
+                </a>
+                <a
+                  href={backToDashboard}
+                  class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-xs transition-colors hover:bg-white/20"
+                >
+                  Add another
+                </a>
+              </div>
             </div>
 
             {success && (
