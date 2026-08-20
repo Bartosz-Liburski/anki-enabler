@@ -3,7 +3,7 @@ project: "Anki enabler"
 version: 1
 status: draft
 created: 2026-07-23
-updated: 2026-07-23
+updated: 2026-08-20
 prd_version: 1
 main_goal: low-complexity
 top_blocker: time
@@ -31,11 +31,11 @@ The product wedge — the one trait that, if removed, makes this indistinguishab
 
 | ID   | Change ID                   | Outcome (user can …)                                                        | Prerequisites | PRD refs                        | Status   |
 | ---- | --------------------------- | --------------------------------------------------------------------------- | ------------- | ------------------------------- | -------- |
-| F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | ready    |
-| S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | proposed |
-| S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | proposed |
-| S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | blocked  |
-| S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | proposed |
+| F-01 | per-user-data-isolation     | (foundation) sources & flashcards persist per user with enforced isolation  | —             | FR-001, NFR (no cross-user)     | done     |
+| S-01 | add-screenshot-source       | add a screenshot source and set its per-source learning direction           | F-01          | FR-002, FR-003, NFR (size cap)  | done     |
+| S-02 | generate-and-review-cards   | generate Q/A cards from a source, then review them keep/discard             | S-01          | FR-007, FR-008, FR-009, FR-010, US-01 | done     |
+| S-03 | export-kept-cards-csv       | export the kept flashcards to a CSV file                                    | S-02          | FR-012                          | done     |
+| S-04 | manage-sources-and-decks    | browse sources/decks and delete a source (cascading its cards)              | S-01, S-02    | FR-005, FR-006, FR-011          | done     |
 | S-05 | add-plaintext-source        | add a plain-text file (lyrics, transcript) as a source                      | S-02          | FR-004                          | proposed |
 
 ## Streams
@@ -74,7 +74,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Sequenced first because the privacy NFR gates launch and cross-user data leakage is the #1 risk in `infrastructure.md`'s pre-mortem (module-scope client reuse leaking sessions). Kept minimal — this establishes the isolation contract and the two tables the first slice needs, not a complete data layer; S-01/S-02 still add their own columns and exercise the tables through user features.
-- **Status:** ready
+- **Status:** done
 
 ## Slices
 
@@ -89,7 +89,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Where do uploaded images live and how is the size cap enforced at upload time? — Owner: TBD (resolve in `/10x-plan`). Block: no.
 - **Risk:** Sequenced before generation because a stored, context-tagged source is the input generation consumes. Kept simple per the low-complexity goal — upload + persist + a small learning-context form, no image processing beyond storage (per `infrastructure.md`, images go straight to Supabase Storage; the function stays orchestration-only).
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Generate flashcards from a source and review them (keep/discard)
 
@@ -103,7 +103,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Which LLM provider/model, and how is the per-source card-count cap enforced so cost stays bounded? — Owner: TBD (resolve in `/10x-plan`). Block: no.
   - How is the ≥ 75%-kept quality bar measured/validated in practice? — Owner: user. Block: no.
 - **Risk:** This is the north star and carries the product's riskiest assumption (generation quality). Sequenced as early as prerequisites allow. The LLM capability (SDK, API key, `maxDuration`/Fluid-Compute setup, input caps) is introduced here — its first and only consumer — rather than as a separate foundation, keeping the technical surface progressive. Watch the Vercel Fluid-Compute timeout footgun from `infrastructure.md`.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Export kept flashcards to CSV
 
@@ -116,7 +116,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Exact CSV column layout — front/back order, delimiter, header row, tags/deck column — must match the target SRS import format. — Owner: user. Block: yes.
 - **Risk:** Completes the core loop but is `blocked` until the CSV-layout Open Question resolves; an unspecified format produces an export nothing can import. Small once the format is decided.
-- **Status:** blocked
+- **Status:** done
 
 ### S-04: Browse and manage sources/decks
 
@@ -128,7 +128,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Blockers:** —
 - **Unknowns:** —
 - **Risk:** Navigation and cleanup over data that S-01/S-02 already create; no separate source-browser screen (sources surface via their deck, per FR-005). FR-011 (grouping) is nice-to-have and can be trimmed under the time budget without dropping the must-have delete/browse behaviour.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Add a plain-text file as a source
 
@@ -173,3 +173,13 @@ Foundations below assume these are present and do NOT re-scaffold them.
 ## Done
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived. Do NOT pre-populate.)
+
+- **F-01: (foundation) the `sources` and `flashcards` persistence exists with row-level per-user isolation enforced, so a signed-in user's data is readable/writable only by them.** — Archived 2026-08-20 → `context/archive/2026-07-23-per-user-data-isolation/`. Lesson: —.
+
+- **S-01: user can upload a screenshot as a source and set that source's learning context (foreign language being learned + language(s) already known), which fixes the translation direction for later generation.** — Archived 2026-08-20 → `context/archive/2026-07-25-add-screenshot-source/`. Lesson: —.
+
+- **S-02: user can trigger generation for a source and get capped Q/A flashcards oriented learned → known (reusing an in-source translation when present, producing one when absent), can re-generate to replace the set, and reviews the cards on a single screen — discarding weak ones; the rest are kept. A source yielding no usable cards shows an explanatory state, not a silent empty result.** — Archived 2026-08-20 → `context/archive/2026-07-30-generate-and-review-cards/`. Lesson: —.
+
+- **S-03: user can export the kept flashcards (those not discarded) to a CSV file suitable for import into their SRS tool.** — Archived 2026-08-20 → `context/archive/2026-08-11-export-kept-cards-csv/`. Lesson: —.
+
+- **S-04: user can browse their saved sources through the deck view, see cards grouped by source/deck, and delete a source — which cascades to delete the flashcards generated from it.** — Archived 2026-08-20 → `context/archive/2026-08-20-manage-sources-and-decks/`. Lesson: —.

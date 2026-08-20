@@ -2,9 +2,10 @@
 change_id: per-user-data-isolation
 roadmap_id: F-01
 title: Per-user data isolation for sources & flashcards
-status: implemented
+status: archived
 created: 2026-07-23
-updated: 2026-07-23
+archived_at: 2026-08-20T14:58:34Z
+updated: 2026-08-20
 prd_refs:
   - FR-001
   - NFR (no cross-user access)

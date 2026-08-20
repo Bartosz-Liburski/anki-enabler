@@ -734,7 +734,7 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 
 #### Manual
 
-- [ ] 2.7 `ANTHROPIC_API_KEY` set locally and in Vercel (Production + Preview)
+- [x] 2.7 `ANTHROPIC_API_KEY` set locally and in Vercel (Production + Preview) — resolved 2026-08-20: variable present for both environments, and generation verified end-to-end against the deployed app (a screenshot produced cards), so the key is valid rather than merely set.
 - [x] 2.8 App builds without the key and the config banner names it — ac83135
 - [x] 2.9 A one-off call against a real screenshot returns schema-valid cards — ac83135
 
@@ -776,7 +776,7 @@ kept cards; S-04's delete cascades through `source_id` without further work.
 - [x] 4.10 Unauthenticated POST redirects to `/auth/signin` — 7ec3c06
 - [x] 4.11 Missing `ANTHROPIC_API_KEY` fails cleanly and writes nothing — 7ec3c06
 - [x] 4.12 Forced upstream failure leaves the previous card set intact — 7ec3c06
-- [ ] 4.13 Fluid Compute confirmed enabled on the Vercel project
+- [x] 4.13 Fluid Compute confirmed enabled on the Vercel project — resolved 2026-08-20: toggle reads Enabled in Settings → Functions, so `maxDuration: 60` holds instead of silently reverting to the Hobby 10 s cap.
 
 ### Phase 5: Review Screen
 
