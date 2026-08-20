@@ -1,0 +1,40 @@
+---
+import type { PairSummary } from "@/lib/pairs";
+import { dashboardUrl } from "@/lib/source-pair";
+import { languageLabel } from "@/lib/languages";
+
+interface Props {
+  pairs: PairSummary[];
+  activeLearnedLanguage?: string;
+  activeKnownLanguage?: string;
+}
+
+const { pairs, activeLearnedLanguage, activeKnownLanguage } = Astro.props;
+
+function isActive(pair: PairSummary): boolean {
+  return pair.learnedLanguage === activeLearnedLanguage && pair.knownLanguage === activeKnownLanguage;
+}
+---
+
+<nav class="mb-6 flex flex-wrap items-center gap-2 text-sm">
+  {
+    pairs.map((pair) => (
+      <a
+        href={dashboardUrl({ learned_language: pair.learnedLanguage, known_language: pair.knownLanguage })}
+        class:list={`rounded-lg border px-3 py-1.5 transition-colors ${
+          isActive(pair)
+            ? "border-purple-400/60 bg-purple-500/20 text-white"
+            : "border-white/20 bg-white/10 text-blue-100/70 hover:bg-white/20"
+        }`}
+      >
+        {languageLabel(pair.learnedLanguage)} → {languageLabel(pair.knownLanguage)}
+      </a>
+    ))
+  }
+  <a
+    href={dashboardUrl({ pair: "change" })}
+    class="rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-blue-100/70 transition-colors hover:bg-white/20"
+  >
+    + Add a language pair
+  </a>
+</nav>

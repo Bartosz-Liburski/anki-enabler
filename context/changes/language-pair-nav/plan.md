@@ -198,29 +198,29 @@ Add the same nav to `/sources/[id]` so a user can jump straight to a different p
 
 #### Automated
 
-- [x] 1.1 Lint passes: `npm run lint`
-- [x] 1.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 1.1 Lint passes: `npm run lint` — 936f521
+- [x] 1.2 Build (includes Astro type checking) passes: `npm run build` — 936f521
 
 #### Manual
 
-- [x] 1.3 Fresh session, existing user with 2+ pairs: bare `/dashboard` lands on the most-recently-added pair
-- [x] 1.4 Brand-new user (zero sources): bare `/dashboard` still shows the blank pick-a-pair screen
-- [x] 1.5 `/api/export.csv?learned_language=<x>&known_language=<y>` downloads only that pair's kept cards; no-params call still exports everything
-- [x] 1.6 `?pair=change` still lands on the blank picker, not back on the most recent pair
+- [x] 1.3 Fresh session, existing user with 2+ pairs: bare `/dashboard` lands on the most-recently-added pair — 936f521
+- [x] 1.4 Brand-new user (zero sources): bare `/dashboard` still shows the blank pick-a-pair screen — 936f521
+- [x] 1.5 `/api/export.csv?learned_language=<x>&known_language=<y>` downloads only that pair's kept cards; no-params call still exports everything — 936f521
+- [x] 1.6 `?pair=change` still lands on the blank picker, not back on the most recent pair — 936f521
 
 ### Phase 2: PairNav component and dashboard integration
 
 #### Automated
 
-- [ ] 2.1 Lint passes: `npm run lint`
-- [ ] 2.2 Build (includes Astro type checking) passes: `npm run build`
+- [x] 2.1 Lint passes: `npm run lint`
+- [x] 2.2 Build (includes Astro type checking) passes: `npm run build`
 
 #### Manual
 
-- [ ] 2.3 `/dashboard` "Your decks" shows only the active pair's decks
-- [ ] 2.4 Nav lists all pairs newest-first; clicking one switches decks/count/CSV link to it
-- [ ] 2.5 "Download CSV" downloads only the active pair's kept cards, count matches
-- [ ] 2.6 "Add a language pair" reaches the blank picker; old "Change" link is gone
+- [x] 2.3 `/dashboard` "Your decks" shows only the active pair's decks
+- [x] 2.4 Nav lists all pairs newest-first; clicking one switches decks/count/CSV link to it
+- [x] 2.5 "Download CSV" downloads only the active pair's kept cards, count matches
+- [x] 2.6 "Add a language pair" reaches the blank picker; old "Change" link is gone
 
 ### Phase 3: PairNav on the source detail page
 
