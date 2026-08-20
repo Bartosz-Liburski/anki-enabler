@@ -355,16 +355,16 @@ of this code does not restore anything a user deleted while it was live.
 
 #### Automated
 
-- [x] 2.1 Linting passes: `npm run lint`
-- [x] 2.2 Type checking passes: `npx astro check`
-- [x] 2.3 Build succeeds: `npm run build`
+- [x] 2.1 Linting passes: `npm run lint` — 9e05b42
+- [x] 2.2 Type checking passes: `npx astro check` — 9e05b42
+- [x] 2.3 Build succeeds: `npm run build` — 9e05b42
 
 #### Manual
 
-- [x] 2.4 The first click warns and does not delete; the second deletes and lands on the dashboard with a confirmation
-- [x] 2.5 The deleted deck is gone from the dashboard list and its cards are gone from the database
-- [x] 2.6 The source's object is no longer in the `screenshots` bucket
-- [x] 2.7 Posting to the delete route without the confirm field deletes nothing and returns the confirm-required banner
-- [x] 2.8 A never-generated source can be deleted
-- [x] 2.9 Deleting another user's source id changes nothing and reveals nothing
-- [x] 2.10 Deleting the last source in a pair group removes the whole group, and deleting the last source overall shows the empty panel again
+- [x] 2.4 The first click warns and does not delete; the second deletes and lands on the dashboard with a confirmation — 9e05b42
+- [x] 2.5 The deleted deck is gone from the dashboard list and its cards are gone from the database — 9e05b42
+- [x] 2.6 The source's object is no longer in the `screenshots` bucket — 9e05b42
+- [x] 2.7 Posting to the delete route without the confirm field deletes nothing and returns the confirm-required banner — 9e05b42
+- [x] 2.8 A never-generated source can be deleted — 9e05b42
+- [x] 2.9 Deleting another user's source id changes nothing and reveals nothing — 9e05b42
+- [x] 2.10 Deleting the last source in a pair group removes the whole group, and deleting the last source overall shows the empty panel again — 9e05b42

@@ -2,7 +2,7 @@
 change_id: manage-sources-and-decks
 roadmap_id: S-04
 title: Browse and manage sources/decks
-status: implementing
+status: implemented
 created: 2026-08-20
 updated: 2026-08-20
 prd_refs:
