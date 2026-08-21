@@ -1,114 +1,211 @@
--- Isolation test: per-user RLS on sources & flashcards (F-01)
+-- Isolation test: per-user RLS on sources, flashcards & the screenshots Storage bucket (F-01, S-01)
 --
 -- Proves the launch-gating NFR: "a user's sources and generated flashcards are never
 -- visible to any other user." Seeds two users, then — acting AS each user via a JWT claim —
--- asserts that no read/insert/update/delete path crosses the user boundary.
+-- asserts that no read/insert/update path crosses the user boundary, across BOTH the table
+-- policies (sources_owner_all, flashcards_owner_all) and 3 of the 4 Storage bucket policies on
+-- the private `screenshots` bucket (screenshots_owner_select/insert/update). The 4th
+-- (screenshots_owner_delete) cannot be exercised via raw SQL on this platform — Supabase's
+-- `storage.objects` carries a `protect_delete()` trigger that blocks ALL direct SQL DELETEs,
+-- for every role, so the underlying object-store blob is never orphaned from its DB row.
+-- Deletion only ever happens through the Storage API, so that policy is proven at the
+-- application layer instead (Phase 4's IDOR integration tests, via the real Storage client).
 --
 -- HOW TO RUN (against the linked hosted project, via the Management API):
---   npx supabase db query --file supabase/tests/isolation.sql --linked
+--   npm run test:rls
+--   (wraps: npx supabase db query --file supabase/tests/isolation.sql --linked)
 --
--- The whole test is ONE `DO` block (a single statement) so it runs in one transaction with
--- one session context — no psql meta-commands, no cross-statement role state. It runs as the
--- privileged Management-API role, then `set local role authenticated` drops into the role
--- RLS actually applies to (auth.uid() reads request.jwt.claims->>'sub'), exactly like the
--- app's per-request client.
+-- Real pgTAP (https://pgtap.org), not a hand-rolled DO block. The Management API's `db query`
+-- only returns the FINAL statement's result set (no interleaved NOTICE output like a real
+-- psql session would show) — so every assertion's own TAP output line is captured into a
+-- temp table as it runs, and the last statement selects all of them back in order. That is
+-- what makes a specific failure nameable instead of only "something in this file broke".
 --
--- Outcome:
---   * All assertions pass  -> block completes, fixtures are deleted, returns no error.
---   * Any breach           -> `raise exception` aborts the block; the whole statement's
---                             transaction rolls back, so fixture rows never persist.
--- So a clean (non-error) run == isolation holds; an error == a real isolation failure
--- (or a setup problem, which the message will name).
+-- The `pgtap` extension is created INSIDE the transaction below, so `rollback` removes it
+-- again — this never leaves a lasting change on the hosted project, the same way the fixture
+-- rows never persist.
 --
 -- NOTE: auth.users' required columns vary by Supabase version. If the fixture insert fails
 -- on a NOT NULL column, add it to the insert below — the isolation logic is unaffected.
 
-do $$
-declare
-  user_a constant uuid := '11111111-1111-1111-1111-111111111111';
-  user_b constant uuid := '22222222-2222-2222-2222-222222222222';
-  src_a  constant uuid := 'aaaaaaaa-0000-0000-0000-000000000001';
-  fc_a   constant uuid := 'aaaaaaaa-0000-0000-0000-000000000002';
-  src_b  constant uuid := 'bbbbbbbb-0000-0000-0000-000000000001';
-  fc_b   constant uuid := 'bbbbbbbb-0000-0000-0000-000000000002';
-  n              int;
-  affected       int;
-  insert_blocked boolean := false;
-begin
-  -- --- Fixtures (as the privileged role; bypasses RLS) ---------------------
-  delete from auth.users where id in (user_a, user_b);  -- idempotent clean slate
-  insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
-                          email_confirmed_at, created_at, updated_at)
-  values
-    ('00000000-0000-0000-0000-000000000000', user_a, 'authenticated', 'authenticated',
-     'user_a@isolation.test', '', now(), now(), now()),
-    ('00000000-0000-0000-0000-000000000000', user_b, 'authenticated', 'authenticated',
-     'user_b@isolation.test', '', now(), now(), now());
+begin;
 
-  -- --- Drop into the RLS-governed role ------------------------------------
-  set local role authenticated;
+create extension if not exists pgtap with schema extensions;
 
-  -- Seed one source + flashcard for each user, acting as that user, so the INSERTs
-  -- themselves pass through RLS WITH CHECK (proof that an owner can write their own rows).
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', user_a::text, 'role', 'authenticated')::text, true);
-  insert into public.sources (id, user_id) values (src_a, user_a);
-  insert into public.flashcards (id, user_id, source_id) values (fc_a, user_a, src_a);
+select plan(13);
 
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', user_b::text, 'role', 'authenticated')::text, true);
-  insert into public.sources (id, user_id) values (src_b, user_b);
-  insert into public.flashcards (id, user_id, source_id) values (fc_b, user_b, src_b);
+-- ---------------------------------------------------------------------------------------
+-- Fixtures (as the privileged Management-API role; bypasses RLS)
+-- ---------------------------------------------------------------------------------------
+insert into auth.users (instance_id, id, aud, role, email, encrypted_password,
+                        email_confirmed_at, created_at, updated_at)
+values
+  ('00000000-0000-0000-0000-000000000000', '11111111-1111-1111-1111-111111111111', 'authenticated',
+   'authenticated', 'user_a@isolation.test', '', now(), now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '22222222-2222-2222-2222-222222222222', 'authenticated',
+   'authenticated', 'user_b@isolation.test', '', now(), now(), now());
 
-  -- --- Assertions: acting as user B, try to reach user A's data every way --
-  -- (claims are currently user B)
+-- Drop into the RLS-governed role for everything below. The output-capture table is created
+-- AFTER the switch so `authenticated` owns it — created before, it would need an explicit
+-- GRANT to be writable from that role.
+set local role authenticated;
 
-  -- 1. SELECT must not reveal user A's rows.
-  select count(*) into n from public.sources where user_id = user_a;
-  if n <> 0 then raise exception 'ISOLATION FAILURE: user B can SELECT % of A''s sources', n; end if;
+create temporary table tap_out (id serial primary key, line text);
 
-  select count(*) into n from public.flashcards where user_id = user_a;
-  if n <> 0 then raise exception 'ISOLATION FAILURE: user B can SELECT % of A''s flashcards', n; end if;
+-- Seed one source + flashcard + storage object per user, acting AS that user, so the INSERTs
+-- themselves pass through RLS/Storage WITH CHECK (proof an owner can write their own rows).
+-- `learned_language`/`known_language` are NOT NULL and `image_path` is required for the default
+-- `type = 'screenshot'` (sources_screenshot_requires_image) — current schema, not F-01's original.
+select set_config('request.jwt.claims',
+  json_build_object('sub', '11111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text, true);
 
-  -- 2. Sanity: user B sees exactly their own row (RLS is not blocking everything).
-  select count(*) into n from public.sources;
-  if n <> 1 then raise exception 'ISOLATION FAILURE: user B sees % sources, expected exactly 1', n; end if;
+insert into public.sources (id, user_id, image_path, learned_language, known_language)
+values ('aaaaaaaa-0000-0000-0000-000000000001', '11111111-1111-1111-1111-111111111111',
+        '11111111-1111-1111-1111-111111111111/shot.png', 'it', 'pl');
+insert into public.flashcards (id, user_id, source_id, front, back)
+values ('aaaaaaaa-0000-0000-0000-000000000002', '11111111-1111-1111-1111-111111111111',
+        'aaaaaaaa-0000-0000-0000-000000000001', 'ciao', 'cześć');
+insert into storage.objects (bucket_id, name, owner)
+values ('screenshots', '11111111-1111-1111-1111-111111111111/shot.png', '11111111-1111-1111-1111-111111111111');
 
-  -- 3. INSERT carrying user A's user_id must be rejected by WITH CHECK.
-  begin
-    insert into public.sources (user_id) values (user_a);
-  exception when others then
-    insert_blocked := true;
-  end;
-  if not insert_blocked then
-    raise exception 'ISOLATION FAILURE: user B inserted a source owned by A (WITH CHECK not enforced)';
-  end if;
+select set_config('request.jwt.claims',
+  json_build_object('sub', '22222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text, true);
 
-  -- 4. UPDATE of user A's rows must affect zero rows.
-  update public.sources set user_id = user_id where user_id = user_a;
-  get diagnostics affected = row_count;
-  if affected <> 0 then raise exception 'ISOLATION FAILURE: user B UPDATEd % of A''s sources', affected; end if;
+insert into public.sources (id, user_id, image_path, learned_language, known_language)
+values ('bbbbbbbb-0000-0000-0000-000000000001', '22222222-2222-2222-2222-222222222222',
+        '22222222-2222-2222-2222-222222222222/shot.png', 'it', 'pl');
+insert into public.flashcards (id, user_id, source_id, front, back)
+values ('bbbbbbbb-0000-0000-0000-000000000002', '22222222-2222-2222-2222-222222222222',
+        'bbbbbbbb-0000-0000-0000-000000000001', 'ciao', 'cześć');
+insert into storage.objects (bucket_id, name, owner)
+values ('screenshots', '22222222-2222-2222-2222-222222222222/shot.png', '22222222-2222-2222-2222-222222222222');
 
-  -- 5. DELETE of user A's rows must affect zero rows.
-  delete from public.sources where user_id = user_a;
-  get diagnostics affected = row_count;
-  if affected <> 0 then raise exception 'ISOLATION FAILURE: user B DELETEd % of A''s sources', affected; end if;
+-- ---------------------------------------------------------------------------------------
+-- Table RLS: acting as user B, try to reach user A's sources/flashcards every way (claims
+-- are already user B from the seed step above).
+-- ---------------------------------------------------------------------------------------
 
-  -- 6. Acting as user A, confirm A still sees exactly their own (untouched) row.
-  perform set_config('request.jwt.claims',
-    json_build_object('sub', user_a::text, 'role', 'authenticated')::text, true);
-  select count(*) into n from public.sources;
-  if n <> 1 then raise exception 'ISOLATION FAILURE: user A sees % sources, expected exactly 1', n; end if;
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from public.sources where user_id = '11111111-1111-1111-1111-111111111111' $$,
+  ARRAY[0],
+  'user B cannot SELECT user A''s sources'
+);
 
-  -- 7. Cascade (FR-006): deleting user A's source removes its flashcards.
-  delete from public.sources where id = src_a;
-  select count(*) into n from public.flashcards where source_id = src_a;
-  if n <> 0 then raise exception 'CASCADE FAILURE: % flashcards survived deletion of their source', n; end if;
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from public.flashcards where user_id = '11111111-1111-1111-1111-111111111111' $$,
+  ARRAY[0],
+  'user B cannot SELECT user A''s flashcards'
+);
 
-  -- --- Cleanup (back to privileged role) ----------------------------------
-  reset role;
-  delete from auth.users where id in (user_a, user_b);  -- cascades to sources + flashcards
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from public.sources $$,
+  ARRAY[1],
+  'user B sees exactly their own source (RLS is not blocking everything)'
+);
 
-  raise notice 'ISOLATION OK: no cross-user read/insert/update/delete path; each user sees only their own rows';
-end
-$$;
+insert into tap_out (line) select throws_ok(
+  $$ insert into public.sources (user_id, image_path, learned_language, known_language)
+     values ('11111111-1111-1111-1111-111111111111', '11111111-1111-1111-1111-111111111111/evil.png', 'it', 'pl') $$,
+  '42501',
+  NULL,
+  'user B cannot INSERT a source owned by A (WITH CHECK not enforced)'
+);
+
+insert into tap_out (line) select results_eq(
+  $$ with updated as (
+       update public.sources set user_id = user_id
+       where user_id = '11111111-1111-1111-1111-111111111111'
+       returning 1
+     )
+     select count(*)::int from updated $$,
+  ARRAY[0],
+  'user B UPDATE of user A''s sources affects 0 rows'
+);
+
+insert into tap_out (line) select results_eq(
+  $$ with deleted as (
+       delete from public.sources
+       where user_id = '11111111-1111-1111-1111-111111111111'
+       returning 1
+     )
+     select count(*)::int from deleted $$,
+  ARRAY[0],
+  'user B DELETE of user A''s sources affects 0 rows'
+);
+
+-- ---------------------------------------------------------------------------------------
+-- Table RLS: acting as user A again, confirm nothing above touched their row, then perform
+-- a real (legitimate) delete of their own source and confirm the flashcard cascade (FR-006).
+-- ---------------------------------------------------------------------------------------
+
+select set_config('request.jwt.claims',
+  json_build_object('sub', '11111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text, true);
+
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from public.sources $$,
+  ARRAY[1],
+  'user A still sees exactly their own (untouched) source after user B''s attempts'
+);
+
+insert into tap_out (line) select lives_ok(
+  $$ delete from public.sources where id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  'user A can delete their own source'
+);
+
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from public.flashcards where source_id = 'aaaaaaaa-0000-0000-0000-000000000001' $$,
+  ARRAY[0],
+  'deleting a source cascades to its flashcards (FR-006)'
+);
+
+-- ---------------------------------------------------------------------------------------
+-- Storage RLS: acting as user B, try to reach user A's screenshot object. The source-row
+-- delete above does not touch storage.objects (no DB-level FK), so user A's object is still
+-- the right fixture to attack here. DELETE is intentionally not tested — see header comment.
+-- ---------------------------------------------------------------------------------------
+
+select set_config('request.jwt.claims',
+  json_build_object('sub', '22222222-2222-2222-2222-222222222222', 'role', 'authenticated')::text, true);
+
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from storage.objects
+     where bucket_id = 'screenshots' and name = '11111111-1111-1111-1111-111111111111/shot.png' $$,
+  ARRAY[0],
+  'user B cannot SELECT user A''s screenshot object'
+);
+
+insert into tap_out (line) select throws_ok(
+  $$ insert into storage.objects (bucket_id, name, owner)
+     values ('screenshots', '11111111-1111-1111-1111-111111111111/evil.png', '22222222-2222-2222-2222-222222222222') $$,
+  '42501',
+  NULL,
+  'user B cannot INSERT into user A''s storage folder (WITH CHECK not enforced)'
+);
+
+insert into tap_out (line) select results_eq(
+  $$ with updated as (
+       update storage.objects set owner = '22222222-2222-2222-2222-222222222222'
+       where bucket_id = 'screenshots' and name = '11111111-1111-1111-1111-111111111111/shot.png'
+       returning 1
+     )
+     select count(*)::int from updated $$,
+  ARRAY[0],
+  'user B UPDATE of user A''s screenshot object affects 0 rows'
+);
+
+-- Sanity: acting as user A, their screenshot object survived every attempt above.
+select set_config('request.jwt.claims',
+  json_build_object('sub', '11111111-1111-1111-1111-111111111111', 'role', 'authenticated')::text, true);
+
+insert into tap_out (line) select results_eq(
+  $$ select count(*)::int from storage.objects
+     where bucket_id = 'screenshots' and name = '11111111-1111-1111-1111-111111111111/shot.png' $$,
+  ARRAY[1],
+  'user A''s screenshot object is untouched after user B''s attempts'
+);
+
+insert into tap_out (line) select * from finish();
+
+select line from tap_out order by id;
+
+rollback;
