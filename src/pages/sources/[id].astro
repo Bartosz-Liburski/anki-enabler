@@ -29,9 +29,10 @@ const { data: source } = supabase
 
 // Same lightweight, unfiltered query as dashboard.astro's nav — ranks the user's pairs by
 // recency so this page can offer the same pair-switching nav (S-05).
-const { data: pairRows } = supabase
+const { data: pairRows, error: pairsError } = supabase
   ? await supabase.from("sources").select("learned_language, known_language, created_at")
-  : { data: null };
+  : { data: null, error: null };
+const pairsFailed = pairsError !== null;
 const pairs = toPairSummaries(pairRows ?? []);
 
 const { data: cardRows } =
@@ -118,6 +119,12 @@ const backToDashboard = source
               activeLearnedLanguage={source.learned_language}
               activeKnownLanguage={source.known_language}
             />
+
+            {pairsFailed && (
+              <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">
+                Your language pairs couldn't be loaded. Reload the page to try again — nothing has been lost.
+              </p>
+            )}
 
             {success && (
               <p class="mt-6 rounded-lg border border-emerald-500/30 bg-emerald-900/30 px-3 py-2 text-sm text-emerald-200">

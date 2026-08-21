@@ -62,7 +62,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
             .limit(1)
             .maybeSingle();
 
-          if (mostRecent) {
+          if (mostRecent && isValidPair(mostRecent.learned_language, mostRecent.known_language)) {
             return context.redirect(
               dashboardPairUrl(
                 { learnedLanguage: mostRecent.learned_language, knownLanguage: mostRecent.known_language },

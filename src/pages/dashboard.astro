@@ -41,9 +41,10 @@ const supabase = createClient(Astro.request.headers, Astro.cookies);
 
 // Language-pair nav (S-05). A lightweight query — no flashcards embedded — since this only ranks
 // pairs by recency; the pair-scoped deck list below runs its own, separate query.
-const { data: pairRows } = supabase
+const { data: pairRows, error: pairsError } = supabase
   ? await supabase.from("sources").select("learned_language, known_language, created_at")
-  : { data: null };
+  : { data: null, error: null };
+const pairsFailed = pairsError !== null;
 const pairs = toPairSummaries(pairRows ?? []);
 
 // Gates the pair-scoped export link (S-03, S-05). A head-only count, filtered to the active pair
@@ -111,6 +112,14 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
       </p>
 
       <PairNav pairs={pairs} activeLearnedLanguage={learnedLanguage} activeKnownLanguage={knownLanguage} />
+
+      {
+        pairsFailed && (
+          <p class="mt-3 rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-left text-sm text-red-300">
+            Your language pairs couldn't be loaded. Reload the page to try again — nothing has been lost.
+          </p>
+        )
+      }
 
       {
         success && (
