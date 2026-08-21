@@ -2,8 +2,8 @@
  * Rank a user's language pairs by recency for the pair nav.
  *
  * Pure — no Supabase, no Astro — same shape as `decks.ts`: a page runs its own lightweight query
- * (id, learned_language, known_language, created_at — no flashcards needed) and hands the rows
- * here rather than ranking in SQL.
+ * (learned_language, known_language, created_at — no flashcards needed) and hands the rows here
+ * rather than ranking in SQL.
  */
 
 export interface PairSourceRow {
