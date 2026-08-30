@@ -75,15 +75,15 @@ Stand up Vitest as the project's first test runner, add a shared helper for seed
 
 #### Automated Verification:
 
-- [ ] Vitest runs with zero test files present: `npm run test`
-- [ ] Type checking passes: `npx astro check`
-- [ ] Linting passes: `npm run lint`
+- Vitest runs with zero test files present: `npm run test`
+- Type checking passes: `npx astro check`
+- Linting passes: `npm run lint`
 
 **Note (discovered during implementation):** `isolation.sql` currently fails against the live schema — `learned_language`/`known_language` became `NOT NULL` in a later migration (`20260726105652`) that predates the file's own fixtures. This is pre-existing schema drift, unrelated to the Vitest bootstrap; fixing it is Phase 2's job. Dropped from this phase's verification scope rather than asserting a false pass.
 
 #### Manual Verification:
 
-- [ ] `setupTestUsers()` run once manually confirms two real users appear in the hosted project's `auth.users`, and `teardownTestUsers()` removes them cleanly
+- `setupTestUsers()` run once manually confirms two real users appear in the hosted project's `auth.users`, and `teardownTestUsers()` removes them cleanly
 
 ---
 
@@ -137,12 +137,12 @@ Also discovered empirically: pgTAP's `throws_ok(sql, errcode, description)` 3-ar
 
 #### Automated Verification:
 
-- [ ] `npm run test:rls` passes with all 13 assertions (9 table + 3 Storage: select/insert/update, per the note above) reporting individually via pgTAP output
-- [ ] Deliberately breaking one Storage policy locally (e.g., commenting out `screenshots_owner_select` in a scratch copy) makes the corresponding assertion fail with a specific, readable pgTAP diagnostic — confirms the conversion didn't lose granularity. (Satisfied empirically during implementation: a `throws_ok` argument mistake was caught twice with a specific "not ok N" + `caught`/`wanted` diagnostic before being fixed — the harness demonstrably surfaces a broken assertion, not just a broken file.)
+- `npm run test:rls` passes with all 13 assertions (9 table + 3 Storage: select/insert/update, per the note above) reporting individually via pgTAP output
+- Deliberately breaking one Storage policy locally (e.g., commenting out `screenshots_owner_select` in a scratch copy) makes the corresponding assertion fail with a specific, readable pgTAP diagnostic — confirms the conversion didn't lose granularity. (Satisfied empirically during implementation: a `throws_ok` argument mistake was caught twice with a specific "not ok N" + `caught`/`wanted` diagnostic before being fixed — the harness demonstrably surfaces a broken assertion, not just a broken file.)
 
 #### Manual Verification:
 
-- [ ] Run `npm run test:rls` twice in a row and confirm the hosted project shows no leftover fixture rows or users afterward (transaction rollback verified empirically, not just by reading the SQL)
+- Run `npm run test:rls` twice in a row and confirm the hosted project shows no leftover fixture rows or users afterward (transaction rollback verified empirically, not just by reading the SQL)
 
 ---
 
@@ -198,15 +198,15 @@ Fix the export-banner render-condition gap and the unguarded `formData()` parsin
 
 #### Automated Verification:
 
-- [ ] `npm run test` passes, including the new `dashboard-view.test.ts` and the 4 route-level `formData()`-throws tests
-- [ ] Type checking passes: `npx astro check`
-- [ ] Linting passes: `npm run lint`
-- [ ] Build succeeds: `npm run build`
+- `npm run test` passes, including the new `dashboard-view.test.ts` and the 4 route-level `formData()`-throws tests
+- Type checking passes: `npx astro check`
+- Linting passes: `npm run lint`
+- Build succeeds: `npm run build`
 
 #### Manual Verification:
 
-- [ ] Manually clear the `anki_source_pair` cookie, ensure the test account has zero sources, and hit `/api/export.csv?learned_language=xx&known_language=yy` directly — confirm the dashboard now shows the export-error banner instead of nothing
-- [ ] Manually POST a malformed multipart body to one of the 4 routes (e.g., via curl with a broken `Content-Type` boundary) and confirm the app's error banner renders instead of Astro's default 500 page
+- Manually clear the `anki_source_pair` cookie, ensure the test account has zero sources, and hit `/api/export.csv?learned_language=xx&known_language=yy` directly — confirm the dashboard now shows the export-error banner instead of nothing
+- Manually POST a malformed multipart body to one of the 4 routes (e.g., via curl with a broken `Content-Type` boundary) and confirm the app's error banner renders instead of Astro's default 500 page
 
 ---
 
@@ -243,14 +243,14 @@ Prove that a second authenticated user's real session cannot reach a first user'
 
 #### Automated Verification:
 
-- [ ] `npm run test` passes, including all 5 new/extended IDOR tests
-- [ ] Each IDOR test fails loudly (not silently passes) when temporarily pointed at user A's own session instead of user B's — confirms the test actually exercises the cross-user path rather than trivially passing
-- [ ] Type checking passes: `npx astro check`
-- [ ] Linting passes: `npm run lint`
+- `npm run test` passes, including all 5 new/extended IDOR tests
+- Each IDOR test fails loudly (not silently passes) when temporarily pointed at user A's own session instead of user B's — confirms the test actually exercises the cross-user path rather than trivially passing
+- Type checking passes: `npx astro check`
+- Linting passes: `npm run lint`
 
 #### Manual Verification:
 
-- [ ] Manually sign in as two real accounts in two browser sessions, and confirm user B pasting user A's `/sources/{id}` URL sees "source not found," not user A's cards
+- Manually sign in as two real accounts in two browser sessions, and confirm user B pasting user A's `/sources/{id}` URL sees "source not found," not user A's cards
 
 ---
 
@@ -274,11 +274,11 @@ Fill in `test-plan.md` §6 with the patterns this phase established, and close o
 
 #### Automated Verification:
 
-- [ ] `npm run test` and `npm run test:rls` both still pass after the doc-only edit (no code changed, sanity check)
+- `npm run test` and `npm run test:rls` both still pass after the doc-only edit (no code changed, sanity check)
 
 #### Manual Verification:
 
-- [ ] A fresh read of `test-plan.md` §6 answers "how do I add a test for a new API endpoint in this project" concretely, per the skill's own smoke-test criterion
+- A fresh read of `test-plan.md` §6 answers "how do I add a test for a new API endpoint in this project" concretely, per the skill's own smoke-test criterion
 
 ---
 
@@ -362,21 +362,21 @@ None — no schema changes. The pgTAP conversion runs entirely inside a transact
 
 #### Automated
 
-- [x] 4.1 `npm run test` passes (5 IDOR tests)
-- [x] 4.2 Each IDOR test fails when pointed at the wrong (own) session
-- [x] 4.3 Type checking passes
-- [x] 4.4 Linting passes
+- [x] 4.1 `npm run test` passes (5 IDOR tests) — 8d7e3e2
+- [x] 4.2 Each IDOR test fails when pointed at the wrong (own) session — 8d7e3e2
+- [x] 4.3 Type checking passes — 8d7e3e2
+- [x] 4.4 Linting passes — 8d7e3e2
 
 #### Manual
 
-- [x] 4.5 Two real browser sessions, cross-user URL paste confirmed blocked
+- [x] 4.5 Two real browser sessions, cross-user URL paste confirmed blocked — 8d7e3e2
 
 ### Phase 5: Cookbook Update
 
 #### Automated
 
-- [ ] 5.1 `npm run test` and `npm run test:rls` still pass after doc-only edit
+- [x] 5.1 `npm run test` and `npm run test:rls` still pass after doc-only edit
 
 #### Manual
 
-- [ ] 5.2 §6 read-through answers "how do I add a test for X" concretely
+- [x] 5.2 §6 read-through answers "how do I add a test for X" concretely

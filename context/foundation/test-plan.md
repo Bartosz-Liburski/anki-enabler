@@ -127,11 +127,17 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.1 Adding a unit test
 
-- TBD — see §3 Phase 2 (CSV-escaping pattern) and Phase 3 (direction-validation pattern).
+- **Location**: colocated next to the unit under test (e.g. `src/lib/dashboard-view.test.ts` next to `src/lib/dashboard-view.ts`).
+- **Naming**: `<module>.test.ts`. No network, no real Supabase project — mock `@/lib/supabase`'s `createClient` (and `astro:env/server` if the module reads an env var directly) when testing a route handler in isolation.
+- **Reference test**: `src/lib/dashboard-view.test.ts` (pure-function truth table) and `src/pages/api/sources.test.ts` (route handler with `createClient` mocked, testing one failure branch in isolation).
+- **Run locally**: `npm run test` (or `npm run test:watch`).
 
 ### 6.2 Adding an integration test
 
-- TBD — see §3 Phase 1 (failure-state rendering pattern) and Phase 2 (delete-cascade + Storage pattern).
+- **Location**: colocated, named `<module>.integration.test.ts` — the distinct suffix flags "this test hits the real hosted Supabase project" at a glance; both suffixes are picked up by the same `npm run test`.
+- **Setup pattern**: `beforeAll`/`afterAll` call `setupTestUsers()`/`teardownTestUsers()` from `src/test/supabase-test-users.ts` to seed two real, signed-in users against the hosted-linked project, then build a real per-request client via `createClient(user.request.headers, user.cookies)` — exactly how a live request authenticates. Requires `SUPABASE_SERVICE_ROLE_KEY` set locally (test-only; see `.env.example` — never read by app code).
+- **Reference test**: `src/pages/api/sources/[id]/generate.integration.test.ts`.
+- **Run locally**: `npm run test`.
 
 ### 6.3 Adding an e2e test
 
@@ -139,15 +145,26 @@ the relevant rollout phase ships; before that, the sub-section reads
 
 ### 6.4 Adding a test for a new API endpoint
 
-- TBD — see §3 Phase 1. Will cover: testing an Astro endpoint directly as a function (no server needed), asserting response shape and side-effects, and the IDOR check pattern (different authenticated user → 403/404) established in Phase 1.
+- **Test type**: integration (preferred). Call the exported `POST`/`GET` function directly with a constructed context object (`{ request, cookies, locals, redirect, params }`) — no server needed (confirmed: Astro endpoints are plain functions returning a `Response`).
+- **IDOR pattern**: seed a resource as user A, call the route with user B's real session and user A's known id, assert the route's "not found" outcome and that user A's row is unchanged. Always flip the test to user A's own session first and confirm it *fails* — that's the falsifiability check that proves the test exercises the real cross-user path rather than trivially passing.
+- **Reference test**: `src/pages/api/sources/[id]/delete.integration.test.ts`.
+- **When to add e2e instead**: only if the endpoint's failure mode requires the full deployed shape (auth cookie + adapter crossing) — not needed so far.
+- **Page-level equivalent (Container API)**: for a `.astro` page rather than an API route, render via `astro/container`'s `experimental_AstroContainer`, registering only the renderers the tested branch actually needs (`container.addServerRenderer({ renderer: <framework>ServerRenderer })` from `<integration>/server.js` — the documented `<integration>/container-renderer` subpath does not exist in this project's installed `@astrojs/react` version). The default `node` Vitest environment is sufficient; no special environment override is needed unless a suite uses `jsdom`/`happy-dom` (this project doesn't). Reference: `src/pages/sources/[id].test.ts`.
 
 ### 6.5 Adding an RLS / isolation test
 
-- TBD — see §3 Phase 1. Will extend the existing `supabase/tests/isolation.sql` pgTAP pattern to new tables/columns as they're added.
+- **Location**: `supabase/tests/isolation.sql` (single file, real pgTAP — `begin`/`plan`/…/`finish`/`rollback`).
+- **Output-capture pattern**: `supabase db query --file` only returns the FINAL statement's result set, so every assertion's return value is captured into a temp table first (`insert into tap_out (line) select results_eq(...)`) and selected back, in order, as the file's last statement — otherwise individual pass/fail lines are invisible.
+- **`throws_ok` gotcha**: the 3-arg form `throws_ok(sql, errcode, description)` does NOT skip error-message matching — arg 3 is still `errmsg` when arg 2 is a 5-byte code. Use the 4-arg form `throws_ok(sql, errcode, NULL, description)` to match only the SQLSTATE.
+- **Storage DELETE gotcha**: `storage.objects` has a `protect_delete()` trigger blocking ALL direct SQL `DELETE`, for every role — a Storage delete policy can only be proven through the real Storage API (§6.2's integration pattern), not pgTAP.
+- **Reference**: `supabase/tests/isolation.sql` itself (RLS + Storage select/insert/update coverage).
+- **Run locally**: `npm run test:rls` (wraps `supabase db query --file supabase/tests/isolation.sql --linked` against the hosted project).
 
 ### 6.6 Per-rollout-phase notes
 
-(Filled in by `/10x-implement`'s final sub-phase as each phase ships.)
+- **Phase 1** found `isolation.sql` (F-01's original artifact) already failing against the current schema — `learned_language`/`known_language` became `NOT NULL` in a later migration the file's fixtures predated, and with no CI step running it, nobody had noticed. Lesson: an untested test is not a test.
+- **Phase 2** found the hosted-linked execution path (chosen over local Docker) surfaces real platform gotchas invisible from reading the SQL alone — see §6.5's two gotchas above.
+- **Phase 4** found the project's `@astrojs/react` version doesn't ship the `container-renderer` subpath the official Container API docs example uses, and that the Astro 6 Vitest-environment regression only bites `jsdom`/`happy-dom` setups — this project's plain `node` environment was never at risk. See §6.4's page-level note.
 
 ## 7. What We Deliberately Don't Test
 
