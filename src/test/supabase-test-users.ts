@@ -22,6 +22,9 @@ export interface TestUser {
   /** Minimal `AstroCookies`-compatible stub — satisfies `createClient()`'s `.set()` usage for a
    * possible token-refresh write; other members are unused by the routes under test. */
   cookies: AstroCookies;
+  /** The raw `Cookie` header value — lets a test build its own `Request` (e.g. with a form-data
+   * body for a POST route) while still carrying this user's real session. */
+  cookieHeader: string;
 }
 
 function requireEnv() {
@@ -94,7 +97,7 @@ async function createSignedInUser(label: "a" | "b"): Promise<TestUser> {
   const cookieHeader = [...captured.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
   const request = new Request("http://localhost/", { headers: { Cookie: cookieHeader } });
 
-  return { id: created.user.id, email, request, cookies: cookieJarStub(captured) };
+  return { id: created.user.id, email, request, cookies: cookieJarStub(captured), cookieHeader };
 }
 
 export async function setupTestUsers(): Promise<{ userA: TestUser; userB: TestUser }> {

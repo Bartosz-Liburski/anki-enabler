@@ -220,7 +220,7 @@ Prove that a second authenticated user's real session cannot reach a first user'
 
 #### 1. Route-level IDOR tests
 
-**File**: `src/pages/api/sources/[id]/generate.test.ts` (extend from Phase 3), `src/pages/api/sources/[id]/delete.integration.test.ts` (new), `src/pages/api/sources/[id]/review.integration.test.ts` (new), `src/pages/api/sources/[id]/export.csv.integration.test.ts` (new)
+**File**: `src/pages/api/sources/[id]/generate.integration.test.ts` (new — not an extension of Phase 3's `generate.test.ts`: that file's module-wide `vi.mock` of `@/lib/supabase` would have silently mocked away the real hosted-project client this phase needs), `src/pages/api/sources/[id]/delete.integration.test.ts` (new), `src/pages/api/sources/[id]/review.integration.test.ts` (new), `src/pages/api/sources/[id]/export.csv.integration.test.ts` (new)
 
 **Intent**: For each route, seed a source (and, where relevant, flashcards) as user A via `setupTestUsers()`, then call the route's exported `POST`/`GET` function with user B's real session, passing user A's known resource id. Assert the response is the route's "not found" outcome (never user A's data), and assert user A's rows are unchanged afterward (a direct follow-up read as user A).
 
@@ -232,7 +232,12 @@ Prove that a second authenticated user's real session cannot reach a first user'
 
 **Intent**: Render `src/pages/sources/[id].astro` via the Astro Container API with user B's session and user A's known source id; assert the rendered output shows the "source not found" panel and contains none of user A's card content.
 
-**Contract**: This is the one test in the phase that needs Astro's Container API. Per the Astro 6 regression noted in Current State Analysis, the Vitest test file/config for this specific test must use the `ssr` Vite environment, not the default `node` test environment used everywhere else in this plan — get this wrong and the test can silently pass for the wrong reason (stubbed-out component) rather than actually rendering the page.
+**Contract**: This is the one test in the phase that needs Astro's Container API.
+
+**Note (discovered during implementation):** three corrections to what was assumed during planning:
+1. The default `node` Vitest environment (used everywhere else in this project) turned out to be sufficient — the Astro 6 regression referenced during planning only affects `jsdom`/`happy-dom` environments; since this project never configures either, no special environment override was needed at all.
+2. `@astrojs/react/container-renderer` (the subpath the official docs example uses) doesn't exist in the installed `@astrojs/react` version — used the documented fallback instead: `container.addServerRenderer({ renderer: reactServerRenderer })` with `reactServerRenderer` imported from `@astrojs/react/server.js`. No client renderer was needed since the attacked branch (`source === null`) never hydrates the page's `client:load` islands.
+3. `typescript-eslint`'s project-service type-checking doesn't fully resolve a `.astro` file's type when imported into a `.test.ts` file (flags it as an "error type" even though `astro check` — Astro's own authoritative checker — passes clean). Handled with a narrowly-scoped, explained `eslint-disable-next-line` on the one call site — the project's first such comment, justified by the Container API being explicitly experimental.
 
 ### Success Criteria:
 
@@ -343,28 +348,28 @@ None — no schema changes. The pgTAP conversion runs entirely inside a transact
 
 #### Automated
 
-- [x] 3.1 `npm run test` passes (dashboard-view + 4 formData tests)
-- [x] 3.2 Type checking passes
-- [x] 3.3 Linting passes
-- [x] 3.4 Build succeeds
+- [x] 3.1 `npm run test` passes (dashboard-view + 4 formData tests) — d7f82c0
+- [x] 3.2 Type checking passes — d7f82c0
+- [x] 3.3 Linting passes — d7f82c0
+- [x] 3.4 Build succeeds — d7f82c0
 
 #### Manual
 
-- [x] 3.5 Export-banner gap manually reproduced-then-fixed
-- [x] 3.6 Malformed multipart body manually confirmed to show app banner, not raw 500
+- [x] 3.5 Export-banner gap manually reproduced-then-fixed — d7f82c0
+- [x] 3.6 Malformed multipart body manually confirmed to show app banner, not raw 500 — d7f82c0
 
 ### Phase 4: IDOR Integration Tests
 
 #### Automated
 
-- [ ] 4.1 `npm run test` passes (5 IDOR tests)
-- [ ] 4.2 Each IDOR test fails when pointed at the wrong (own) session
-- [ ] 4.3 Type checking passes
-- [ ] 4.4 Linting passes
+- [x] 4.1 `npm run test` passes (5 IDOR tests)
+- [x] 4.2 Each IDOR test fails when pointed at the wrong (own) session
+- [x] 4.3 Type checking passes
+- [x] 4.4 Linting passes
 
 #### Manual
 
-- [ ] 4.5 Two real browser sessions, cross-user URL paste confirmed blocked
+- [x] 4.5 Two real browser sessions, cross-user URL paste confirmed blocked
 
 ### Phase 5: Cookbook Update
 
