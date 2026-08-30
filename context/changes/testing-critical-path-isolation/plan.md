@@ -375,8 +375,8 @@ None — no schema changes. The pgTAP conversion runs entirely inside a transact
 
 #### Automated
 
-- [x] 5.1 `npm run test` and `npm run test:rls` still pass after doc-only edit
+- [x] 5.1 `npm run test` and `npm run test:rls` still pass after doc-only edit — 5c9c7ca
 
 #### Manual
 
-- [x] 5.2 §6 read-through answers "how do I add a test for X" concretely
+- [x] 5.2 §6 read-through answers "how do I add a test for X" concretely — 5c9c7ca
