@@ -332,26 +332,26 @@ None — no schema changes. The pgTAP conversion runs entirely inside a transact
 
 #### Automated
 
-- [x] 2.1 `npm run test:rls` passes, all 13 assertions (9 table + 3 Storage: select/insert/update — DELETE untestable via raw SQL, see plan note)
-- [x] 2.2 Broken-assertion diagnostic verified (satisfied empirically: two throws_ok argument mistakes were caught with specific "not ok N" diagnostics during implementation)
+- [x] 2.1 `npm run test:rls` passes, all 13 assertions (9 table + 3 Storage: select/insert/update — DELETE untestable via raw SQL, see plan note) — 79a2b63
+- [x] 2.2 Broken-assertion diagnostic verified (satisfied empirically: two throws_ok argument mistakes were caught with specific "not ok N" diagnostics during implementation) — 79a2b63
 
 #### Manual
 
-- [x] 2.3 Two consecutive runs leave no leftover fixture rows/users
+- [x] 2.3 Two consecutive runs leave no leftover fixture rows/users — 79a2b63
 
 ### Phase 3: Close the Two Silent-Failure Gaps
 
 #### Automated
 
-- [ ] 3.1 `npm run test` passes (dashboard-view + 4 formData tests)
-- [ ] 3.2 Type checking passes
-- [ ] 3.3 Linting passes
-- [ ] 3.4 Build succeeds
+- [x] 3.1 `npm run test` passes (dashboard-view + 4 formData tests)
+- [x] 3.2 Type checking passes
+- [x] 3.3 Linting passes
+- [x] 3.4 Build succeeds
 
 #### Manual
 
-- [ ] 3.5 Export-banner gap manually reproduced-then-fixed
-- [ ] 3.6 Malformed multipart body manually confirmed to show app banner, not raw 500
+- [x] 3.5 Export-banner gap manually reproduced-then-fixed
+- [x] 3.6 Malformed multipart body manually confirmed to show app banner, not raw 500
 
 ### Phase 4: IDOR Integration Tests
 

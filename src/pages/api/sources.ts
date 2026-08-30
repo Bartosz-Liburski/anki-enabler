@@ -27,7 +27,12 @@ export const POST: APIRoute = async (context) => {
     return context.redirect("/auth/signin");
   }
 
-  const form = await context.request.formData();
+  let form: FormData;
+  try {
+    form = await context.request.formData();
+  } catch {
+    return context.redirect(dashboardUrl({ error: "request-invalid" }));
+  }
   const file = form.get("file");
   const learnedLanguage = form.get("learned_language");
   const knownLanguage = form.get("known_language");
