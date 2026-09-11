@@ -74,34 +74,58 @@ async function createSignedInUser(label: "a" | "b"): Promise<TestUser> {
   if (createError) {
     throw new Error(`supabase-test-users: failed to create test user ${label}: ${createError.message}`);
   }
+  const userId = created.user.id;
 
-  // Sign in through a real server client so the session cookies come out exactly as
-  // @supabase/ssr would chunk/serialize them for a live request — capture-then-replay, rather
-  // than hand-rolling the cookie format ourselves.
-  const captured = new Map<string, string>();
-  const signInClient = createServerClient<Database>(url, anonKey, {
-    cookies: {
-      getAll: () => [],
-      setAll: (cookiesToSet) => {
-        cookiesToSet.forEach(({ name, value }) => {
-          captured.set(name, value);
-        });
+  try {
+    // Sign in through a real server client so the session cookies come out exactly as
+    // @supabase/ssr would chunk/serialize them for a live request — capture-then-replay, rather
+    // than hand-rolling the cookie format ourselves.
+    const captured = new Map<string, string>();
+    const signInClient = createServerClient<Database>(url, anonKey, {
+      cookies: {
+        getAll: () => [],
+        setAll: (cookiesToSet) => {
+          cookiesToSet.forEach(({ name, value }) => {
+            captured.set(name, value);
+          });
+        },
       },
-    },
-  });
-  const { error: signInError } = await signInClient.auth.signInWithPassword({ email, password });
-  if (signInError) {
-    throw new Error(`supabase-test-users: failed to sign in test user ${label}: ${signInError.message}`);
+    });
+    const { error: signInError } = await signInClient.auth.signInWithPassword({ email, password });
+    if (signInError) {
+      throw new Error(`supabase-test-users: failed to sign in test user ${label}: ${signInError.message}`);
+    }
+
+    const cookieHeader = [...captured.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
+    const request = new Request("http://localhost/", { headers: { Cookie: cookieHeader } });
+
+    return { id: userId, email, request, cookies: cookieJarStub(captured), cookieHeader };
+  } catch (error) {
+    // The user was created but never fully set up — delete it now rather than leaking a real
+    // row in the hosted project's auth.users that nothing would otherwise clean up.
+    await admin.auth.admin.deleteUser(userId);
+    throw error;
   }
-
-  const cookieHeader = [...captured.entries()].map(([name, value]) => `${name}=${value}`).join("; ");
-  const request = new Request("http://localhost/", { headers: { Cookie: cookieHeader } });
-
-  return { id: created.user.id, email, request, cookies: cookieJarStub(captured), cookieHeader };
 }
 
 export async function setupTestUsers(): Promise<{ userA: TestUser; userB: TestUser }> {
-  const [userA, userB] = await Promise.all([createSignedInUser("a"), createSignedInUser("b")]);
+  const results = await Promise.allSettled([createSignedInUser("a"), createSignedInUser("b")]);
+  const succeeded = results.filter(
+    (result): result is PromiseFulfilledResult<TestUser> => result.status === "fulfilled",
+  );
+  const failed = results.filter((result): result is PromiseRejectedResult => result.status === "rejected");
+
+  if (failed.length > 0) {
+    // At least one user's own setup failed — any user that DID succeed would otherwise leak,
+    // since this function is about to throw and its caller never receives a TestUser to tear
+    // down for it.
+    await teardownTestUsers(...succeeded.map((result) => result.value));
+    throw new Error(
+      `supabase-test-users: setupTestUsers failed: ${failed.map((result) => (result.reason as Error).message).join("; ")}`,
+    );
+  }
+
+  const [userA, userB] = succeeded.map((result) => result.value);
   return { userA, userB };
 }
 
@@ -109,5 +133,16 @@ export async function setupTestUsers(): Promise<{ userA: TestUser; userB: TestUs
 export async function teardownTestUsers(...users: TestUser[]): Promise<void> {
   const { url, serviceRoleKey } = requireEnv();
   const admin = createSupabaseAdminClient<Database>(url, serviceRoleKey);
-  await Promise.all(users.map((user) => admin.auth.admin.deleteUser(user.id)));
+  const results = await Promise.allSettled(users.map((user) => admin.auth.admin.deleteUser(user.id)));
+
+  const failures = results
+    .map((result, index) => ({ result, user: users[index] }))
+    .filter((entry): entry is { result: PromiseRejectedResult; user: TestUser } => entry.result.status === "rejected");
+  if (failures.length > 0) {
+    throw new Error(
+      `supabase-test-users: failed to delete user(s): ${failures
+        .map(({ user, result }) => `${user.id} (${(result.reason as Error).message})`)
+        .join("; ")}`,
+    );
+  }
 }

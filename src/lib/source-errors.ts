@@ -42,7 +42,7 @@ export type SourceErrorCode =
 export const SOURCE_ERROR_MESSAGES: Record<SourceErrorCode, string> = {
   // Reachable when the request body itself can't be read (e.g. a malformed multipart boundary)
   // — a raw parse failure, not a validation failure, so it has no field to blame.
-  "request-invalid": "That request couldn't be read. Please try again.",
+  "request-invalid": "That request couldn't be read. Try again.",
   "file-missing": "Pick a screenshot to upload.",
   "file-too-large": "That image is larger than 5 MB. Pick a smaller screenshot.",
   "file-type": "Only PNG or JPEG screenshots are supported.",

@@ -1,9 +1,9 @@
 ---
 change_id: testing-critical-path-isolation
 title: Extend RLS isolation tests and fix silent failure states
-status: implemented
+status: impl_reviewed
 created: 2026-08-21
-updated: 2026-08-21
+updated: 2026-08-30
 archived_at: null
 ---
 
