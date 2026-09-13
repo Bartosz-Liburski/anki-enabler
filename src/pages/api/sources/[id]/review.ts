@@ -33,7 +33,12 @@ export const POST: APIRoute = async (context) => {
 
   const fail = (code: SourceErrorCode) => context.redirect(sourceUrl(id, { error: code }));
 
-  const form = await context.request.formData();
+  let form: FormData;
+  try {
+    form = await context.request.formData();
+  } catch {
+    return fail("request-invalid");
+  }
   const submitted = new Set(form.getAll("keep").filter((value): value is string => typeof value === "string"));
 
   const { data: cards, error: readError } = await supabase.from("flashcards").select("id").eq("source_id", id);

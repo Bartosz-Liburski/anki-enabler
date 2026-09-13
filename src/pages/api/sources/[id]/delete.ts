@@ -41,7 +41,12 @@ export const POST: APIRoute = async (context) => {
 
   // Confirmation is checked BEFORE anything is read or destroyed. The island always sends this
   // field; the guard exists so a page that never hydrated — or a hand-rolled POST — cannot delete.
-  const form = await context.request.formData();
+  let form: FormData;
+  try {
+    form = await context.request.formData();
+  } catch {
+    return fail("request-invalid");
+  }
   if (form.get("confirm") !== "delete") {
     return fail("delete-confirm-required");
   }

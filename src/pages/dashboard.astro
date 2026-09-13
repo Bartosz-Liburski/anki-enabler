@@ -9,6 +9,7 @@ import { toPairSummaries } from "@/lib/pairs";
 import { languageLabel } from "@/lib/languages";
 import { isExportErrorCode, sourceErrorMessage, sourceSuccessMessage } from "@/lib/source-errors";
 import { isValidPair, sourceUrl } from "@/lib/source-pair";
+import { shouldShowExportSection } from "@/lib/dashboard-view";
 
 const { user } = Astro.locals;
 
@@ -220,7 +221,7 @@ const deckDate = new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "shor
       }
 
       {
-        pairReady && (canExport || exportError) && (
+        shouldShowExportSection(canExport, Boolean(exportError)) && (
           <div class="mt-6 border-t border-white/10 pt-6 text-left">
             <h2 class="text-lg font-semibold">Export to Anki</h2>
 

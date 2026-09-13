@@ -75,7 +75,12 @@ export const POST: APIRoute = async (context) => {
 
   // Confirmation is checked BEFORE the model call: a user who lands here by accident on a source
   // that already has cards must not be billed for a generation they never asked for.
-  const form = await context.request.formData();
+  let form: FormData;
+  try {
+    form = await context.request.formData();
+  } catch {
+    return fail("request-invalid");
+  }
   const confirmed = form.get("confirm") === "replace";
 
   const { count: existingCards, error: countError } = await supabase
